@@ -1,45 +1,46 @@
-from servicios.base_datos import obtener_conexion
-from modelos import Recibo
+import sqlite3
+from modelos.recibo import Recibo
+from servicios.servicio_clientes import ServicioClientes
 
 class ServicioRecibos:
-    def __init__(self):
-        self.conexion = obtener_conexion()
+    def __init__(self, db_path="gimnasio.db"):
+        self.db_path = db_path
+        self._crear_tabla()
+        self.servicio_clientes = ServicioClientes(db_path)
 
-    def agregar_recibo(self, recibo: Recibo):
-        cursor = self.conexion.cursor()
+    def _crear_tabla(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO Recibo (cliente_id, año, mes, importe, pagado, fecha_pago, medio_pago)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (recibo.cliente_id, recibo.año, recibo.mes, recibo.importe, int(recibo.pagado), recibo.fecha_pago, recibo.medio_pago))
-        self.conexion.commit()
-        recibo.recibo_id = cursor.lastrowid
-        return recibo
+            CREATE TABLE IF NOT EXISTS recibos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente TEXT,
+                mes TEXT,
+                pagado INTEGER
+            )
+        """)
+        conn.commit()
+        conn.close()
 
-    def listar_recibos_por_cliente(self, cliente_id):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Recibo WHERE cliente_id=?", (cliente_id,))
+    def generar_recibos_mes(self, mes="2025-11"):
+        clientes = self.servicio_clientes.listar_clientes()
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        for c in clientes:
+            cursor.execute("INSERT INTO recibos (cliente, mes, pagado) VALUES (?, ?, ?)",
+                           (c.usuario, mes, int(c.pagado)))
+        conn.commit()
+        conn.close()
+
+    def listar_morosos(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT cliente FROM recibos WHERE pagado=0")
         filas = cursor.fetchall()
-        return [Recibo(*fila) for fila in filas]
-
-    def listar_recibos_por_mes(self, año, mes):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Recibo WHERE año=? AND mes=?", (año, mes))
-        filas = cursor.fetchall()
-        return [Recibo(*fila) for fila in filas]
-
-    def marcar_pagado(self, recibo_id, fecha_pago, medio_pago):
-        cursor = self.conexion.cursor()
-        cursor.execute("""
-            UPDATE Recibo
-            SET pagado=1, fecha_pago=?, medio_pago=?
-            WHERE recibo_id=?
-        """, (fecha_pago, medio_pago, recibo_id))
-        self.conexion.commit()
-
-    def obtener_recibo(self, recibo_id):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Recibo WHERE recibo_id=?", (recibo_id,))
-        fila = cursor.fetchone()
-        if fila:
-            return Recibo(*fila)
-        return None
+        conn.close()
+        morosos = []
+        for f in filas:
+            c = self.servicio_clientes.obtener_cliente_por_usuario(f[0])
+            if c:
+                morosos.append(c)
+        return morosos

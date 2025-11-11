@@ -1,41 +1,55 @@
-from servicios.base_datos import obtener_conexion
-from modelos import Reserva
+import sqlite3
+from modelos.reserva import Reserva
 
 class ServicioReservas:
-    def __init__(self):
-        self.conexion = obtener_conexion()
+    def __init__(self, db_path="gimnasio.db"):
+        self.db_path = db_path
+        self._crear_tabla()
 
-    def agregar_reserva(self, reserva: Reserva):
-        cursor = self.conexion.cursor()
+    def _crear_tabla(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO Reserva (aparato_id, cliente_id, fecha, hora_inicio, duracion_min, estado)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (reserva.aparato_id, reserva.cliente_id, reserva.fecha, reserva.hora_inicio, reserva.duracion_min, reserva.estado))
-        self.conexion.commit()
-        reserva.reserva_id = cursor.lastrowid
-        return reserva
+            CREATE TABLE IF NOT EXISTS reservas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente TEXT,
+                aparato TEXT,
+                hora TEXT,
+                estado TEXT
+            )
+        """)
+        conn.commit()
+        conn.close()
 
-    def listar_reservas_por_dia(self, fecha):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Reserva WHERE fecha=?", (fecha,))
+    def listar_sesiones(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, cliente, aparato, hora, estado FROM reservas")
         filas = cursor.fetchall()
-        return [Reserva(*fila) for fila in filas]
+        conn.close()
+        return [Reserva(*f) for f in filas]
 
-    def listar_reservas_por_cliente(self, cliente_id):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Reserva WHERE cliente_id=?", (cliente_id,))
+    def listar_reservas_pendientes(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, cliente, aparato, hora, estado FROM reservas WHERE estado='pendiente'")
         filas = cursor.fetchall()
-        return [Reserva(*fila) for fila in filas]
+        conn.close()
+        return [Reserva(*f) for f in filas]
 
-    def obtener_reserva(self, reserva_id):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Reserva WHERE reserva_id=?", (reserva_id,))
-        fila = cursor.fetchone()
-        if fila:
-            return Reserva(*fila)
-        return None
+    def listar_solicitudes_pendientes(self):
+        return self.listar_reservas_pendientes()
 
-    def cancelar_reserva(self, reserva_id):
-        cursor = self.conexion.cursor()
-        cursor.execute("UPDATE Reserva SET estado='cancelado' WHERE reserva_id=?", (reserva_id,))
-        self.conexion.commit()
+    def aceptar_reserva(self, reserva):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE reservas SET estado='aceptada' WHERE id=?", (reserva.id,))
+        conn.commit()
+        conn.close()
+
+    def denegar_reserva(self, reserva):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE reservas SET estado='denegada' WHERE id=?", (reserva.id,))
+        conn.commit()
+        conn.close()

@@ -1,33 +1,28 @@
-from servicios.base_datos import obtener_conexion
-from modelos import Aparato
+import sqlite3
+from modelos.aparato import Aparato
 
 class ServicioAparatos:
-    def __init__(self):
-        self.conexion = obtener_conexion()
+    def __init__(self, db_path="gimnasio.db"):
+        self.db_path = db_path
+        self._crear_tabla()
 
-    def agregar_aparato(self, aparato: Aparato):
-        cursor = self.conexion.cursor()
+    def _crear_tabla(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO Aparato (nombre, modelo, ubicacion, descripcion)
-            VALUES (?, ?, ?, ?)
-        """, (aparato.nombre, aparato.modelo, aparato.ubicacion, aparato.descripcion))
-        self.conexion.commit()
-        aparato.aparato_id = cursor.lastrowid
-        return aparato
+            CREATE TABLE IF NOT EXISTS aparatos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT,
+                ocupado INTEGER
+            )
+        """)
+        conn.commit()
+        conn.close()
 
     def listar_aparatos(self):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Aparato")
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, ocupado FROM aparatos")
         filas = cursor.fetchall()
-        return [Aparato(*fila) for fila in filas]
-
-    def obtener_aparato(self, aparato_id):
-        cursor = self.conexion.cursor()
-        cursor.execute("SELECT * FROM Aparato WHERE aparato_id=?", (aparato_id,))
-        fila = cursor.fetchone()
-        if fila:
-            return Aparato(*fila)
-        return None
-
-    def actualizar_aparato(self, aparato: Aparato):
-        cursor = self.c
+        conn.close()
+        return [Aparato(f[0], f[1], bool(f[2])) for f in filas]
