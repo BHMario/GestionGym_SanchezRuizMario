@@ -1,63 +1,90 @@
 import tkinter as tk
-from tkinter import messagebox
-from servicios.servicio_clientes import ServicioClientes
+from tkinter import ttk
+from servicios.servicio_usuarios import ServicioUsuarios
 from interfaz.menu_principal import MenuPrincipal
-from utilidades.constantes import ROL_CLIENTE, ROL_ADMINISTRADOR
-from interfaz.registro import Registro
 
 class Login:
     def __init__(self, root):
         self.root = root
-        self.root.title("Gym For The Moment - Login")
-        self.root.geometry("350x200")
+        self.root.title("Gym For The Moment - Inicio de Sesión")
+        self.root.geometry("1100x750")
         self.root.resizable(False, False)
+        self.root.configure(bg="#FFFFFF")  # Fondo blanco
 
-        # Servicio clientes
-        self.servicio_clientes = ServicioClientes()
+        self.servicio_usuarios = ServicioUsuarios()
 
-        # Widgets login
-        tk.Label(root, text="Usuario:").pack(pady=5)
-        self.entry_usuario = tk.Entry(root)
-        self.entry_usuario.pack(pady=5)
+        self._configurar_estilos()
+        self._construir_interfaz()
 
-        tk.Label(root, text="Contraseña:").pack(pady=5)
-        self.entry_contrasena = tk.Entry(root, show="*")
-        self.entry_contrasena.pack(pady=5)
+    def _configurar_estilos(self):
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("TLabel", background="#F5F5F5", foreground="#222222", font=("Segoe UI", 12))
+        style.configure("TEntry", padding=10, font=("Segoe UI", 12))
+        style.configure("TButton",
+                        background="#333333",
+                        foreground="white",
+                        font=("Segoe UI", 12, "bold"),
+                        padding=10)
+        style.map("TButton",
+                  background=[("active", "#555555")],
+                  foreground=[("active", "white")])
 
-        tk.Button(root, text="Ingresar", width=20, command=self.login_usuario).pack(pady=10)
-        tk.Button(root, text="Registrarse", width=20, command=self.abrir_registro).pack(pady=5)
+    def _construir_interfaz(self):
+        sombra = tk.Frame(self.root, bg="#CCCCCC")
+        sombra.place(relx=0.5, rely=0.5, anchor="center", width=450, height=480)
+
+        self.marco = tk.Frame(self.root, bg="#F5F5F5", bd=0)
+        self.marco.place(relx=0.5, rely=0.5, anchor="center", width=440, height=470)
+
+        tk.Label(self.marco, text="GYM FOR THE MOMENT", bg="#F5F5F5", fg="#222222",
+                 font=("Segoe UI", 24, "bold")).pack(pady=(40, 30))
+
+        ttk.Label(self.marco, text="Usuario:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(0, 5))
+        self.entry_usuario = ttk.Entry(self.marco)
+        self.entry_usuario.pack(fill="x", padx=50, pady=(0, 5))
+
+        ttk.Label(self.marco, text="Contraseña:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(10, 5))
+        self.entry_contrasena = ttk.Entry(self.marco, show="*")
+        self.entry_contrasena.pack(fill="x", padx=50, pady=(0, 5))
+
+        self.label_error = tk.Label(self.marco, text="", fg="red", bg="#F5F5F5", font=("Segoe UI", 10))
+        self.label_error.pack(pady=(5, 10))
+
+        ttk.Button(self.marco, text="Iniciar Sesión", command=self.login_usuario).pack(fill="x", padx=50, pady=(0, 15))
+        ttk.Button(self.marco, text="Crear una cuenta", command=self.abrir_registro).pack(fill="x", padx=50)
+
+        tk.Label(self.marco, text="© 2025 Gym For The Moment", bg="#F5F5F5", fg="#555555", font=("Segoe UI", 10)).pack(side="bottom", pady=15)
 
     def login_usuario(self):
-        usuario = self.entry_usuario.get()
-        contrasena = self.entry_contrasena.get()
+        self.label_error.config(text="")
+        usuario = self.entry_usuario.get().strip()
+        contrasena = self.entry_contrasena.get().strip()
 
         if not usuario or not contrasena:
-            messagebox.showerror("Error", "Debe completar todos los campos")
+            self.label_error.config(text="Debe completar todos los campos")
             return
 
-        # Verificación de login
-        cliente = self.servicio_clientes.obtener_cliente_por_usuario(usuario)
+        usuario_db = self.servicio_usuarios.obtener_usuario_por_usuario(usuario)
 
-        if cliente and contrasena == cliente.contrasena:
-            rol = ROL_CLIENTE
-        elif usuario == "admin" and contrasena == "admin123":
-            rol = ROL_ADMINISTRADOR
+        if usuario_db and contrasena == usuario_db["contrasena"]:
+            rol = usuario_db["rol"]
         else:
-            messagebox.showerror("Error", "Usuario o contraseña incorrectos")
+            self.label_error.config(text="Usuario o contraseña incorrectos")
             return
 
-        messagebox.showinfo("Éxito", f"Bienvenido {usuario} ({rol})")
         self.root.destroy()
         root_menu = tk.Tk()
         MenuPrincipal(root_menu, rol)
         root_menu.mainloop()
 
     def abrir_registro(self):
-        self.root.withdraw()  # Oculta la ventana login
+        from interfaz.registro import Registro
+        self.root.withdraw()
         registro_ventana = tk.Toplevel()
-        Registro(registro_ventana, self.root)  # Pasamos root para poder mostrar login de nuevo
+        Registro(registro_ventana, self.root)
 
-# Para probar
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = Login(root)
