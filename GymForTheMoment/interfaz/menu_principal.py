@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk
 
-# Importar submenús
+# Submenús
 from interfaz.clientes.aparatos import VentanaAparatos
 from interfaz.clientes.clases import VentanaClases
 from interfaz.clientes.rutinas import VentanaRutinas
@@ -14,40 +14,119 @@ from interfaz.administradores.notificaciones import VentanaNotificaciones
 
 from utilidades.constantes import ROL_CLIENTE, ROL_ADMINISTRADOR
 
+
 class MenuPrincipal:
     def __init__(self, root, rol):
         self.root = root
         self.rol = rol
+
+        # --- CONFIG VENTANA ---
         self.root.title("Gym For The Moment - Menú Principal")
-        self.root.geometry("400x400")
+        self.root.geometry("1000x700")
+        self.root.configure(bg="#FFFFFF")
         self.root.resizable(False, False)
 
-        tk.Label(root, text=f"Bienvenido ({rol})", font=("Arial", 14)).pack(pady=20)
+        self._configurar_estilos()
+        self._construir_interfaz()
 
-        # Crear botones según rol
-        if rol == ROL_CLIENTE:
-            self.boton_clientes()
-        elif rol == ROL_ADMINISTRADOR:
-            self.boton_administradores()
+    # ------------------------------
+    #       ESTILOS TTK
+    # ------------------------------
+    def _configurar_estilos(self):
+        style = ttk.Style()
+        style.theme_use("clam")
+
+        style.configure("TLabel",
+                        background="#F5F5F5",
+                        foreground="#222222",
+                        font=("Segoe UI", 12))
+
+        style.configure("TButton",
+                        background="#333333",
+                        foreground="#FFFFFF",
+                        font=("Segoe UI", 12, "bold"),
+                        padding=10)
+
+        style.map("TButton",
+                  background=[("active", "#555555")],
+                  foreground=[("active", "white")])
+
+    # ------------------------------
+    #  CONSTRUCCIÓN DE INTERFAZ
+    # ------------------------------
+    def _construir_interfaz(self):
+
+        # --- Sombra de tarjeta ---
+        sombra = tk.Frame(self.root, bg="#CCCCCC")
+        sombra.place(relx=0.5, rely=0.5, anchor="center", width=700, height=500)
+
+        # --- Tarjeta principal ---
+        tarjeta = tk.Frame(self.root, bg="#F5F5F5")
+        tarjeta.place(relx=0.5, rely=0.5, anchor="center", width=690, height=490)
+
+        # Título
+        tk.Label(tarjeta,
+                 text="GYM FOR THE MOMENT",
+                 bg="#F5F5F5",
+                 fg="#222222",
+                 font=("Segoe UI", 24, "bold")).pack(pady=(40, 10))
+
+        tk.Label(tarjeta,
+                 text=f"Menú Principal - Rol: {self.rol.upper()}",
+                 bg="#F5F5F5",
+                 fg="#444444",
+                 font=("Segoe UI", 15, "bold")).pack(pady=(0, 30))
+
+        # Contenedor de botones
+        contenedor_botones = tk.Frame(tarjeta, bg="#F5F5F5")
+        contenedor_botones.pack()
+
+        # --- BOTONES SEGÚN ROL ---
+        if self.rol == ROL_CLIENTE:
+            self._construir_botones_cliente(contenedor_botones)
+        elif self.rol == ROL_ADMINISTRADOR:
+            self._construir_botones_admin(contenedor_botones)
         else:
-            messagebox.showerror("Error", "Rol desconocido")
-            root.destroy()
+            tk.Label(tarjeta, text="Rol desconocido", fg="red", bg="#F5F5F5").pack()
 
-    # --- Botones clientes ---
-    def boton_clientes(self):
-        tk.Button(self.root, text="Ver Aparatos", width=25, command=self.abrir_aparatos).pack(pady=5)
-        tk.Button(self.root, text="Ver Clases/Sesiones", width=25, command=self.abrir_clases).pack(pady=5)
-        tk.Button(self.root, text="Ver Rutinas", width=25, command=self.abrir_rutinas).pack(pady=5)
-        tk.Button(self.root, text="Pasarela de Pagos", width=25, command=self.abrir_pagos).pack(pady=5)
+        # Pie de página
+        tk.Label(tarjeta,
+                 text="© 2025 Gym For The Moment",
+                 bg="#F5F5F5",
+                 fg="#555555",
+                 font=("Segoe UI", 10)).pack(side="bottom", pady=20)
 
-    # --- Botones administradores ---
-    def boton_administradores(self):
-        tk.Button(self.root, text="Gestión de Usuarios", width=25, command=self.abrir_gestion_usuarios).pack(pady=5)
-        tk.Button(self.root, text="Gestión de Reservas", width=25, command=self.abrir_gestion_reservas).pack(pady=5)
-        tk.Button(self.root, text="Gestión de Recibos", width=25, command=self.abrir_gestion_recibos).pack(pady=5)
-        tk.Button(self.root, text="Notificaciones", width=25, command=self.abrir_notificaciones).pack(pady=5)
+    # ------------------------------
+    #       BOTONES CLIENTE
+    # ------------------------------
+    def _construir_botones_cliente(self, parent):
+        opciones = [
+            ("Ver Aparatos", self.abrir_aparatos),
+            ("Ver Clases / Sesiones", self.abrir_clases),
+            ("Ver Rutinas", self.abrir_rutinas),
+            ("Pasarela de Pagos", self.abrir_pagos),
+        ]
 
-    # --- Funciones para abrir submenús ---
+        for texto, comando in opciones:
+            ttk.Button(parent, text=texto, command=comando).pack(fill="x", padx=150, pady=10)
+
+    # ------------------------------
+    #     BOTONES ADMINISTRADOR
+    # ------------------------------
+    def _construir_botones_admin(self, parent):
+        opciones = [
+            ("Gestión de Usuarios", self.abrir_gestion_usuarios),
+            ("Gestión de Reservas", self.abrir_gestion_reservas),
+            ("Gestión de Recibos", self.abrir_gestion_recibos),
+            ("Notificaciones", self.abrir_notificaciones),
+        ]
+
+        for texto, comando in opciones:
+            ttk.Button(parent, text=texto, command=comando).pack(fill="x", padx=150, pady=10)
+
+    # ------------------------------
+    #     VENTANAS SECUNDARIAS
+    # ------------------------------
     def abrir_aparatos(self):
         ventana = tk.Toplevel(self.root)
         VentanaAparatos(ventana)
@@ -81,8 +160,7 @@ class MenuPrincipal:
         VentanaNotificaciones(ventana)
 
 
-# Para probar el menú de manera independiente
 if __name__ == "__main__":
     root = tk.Tk()
-    MenuPrincipal(root, ROL_CLIENTE)  # O ROL_ADMINISTRADOR
+    MenuPrincipal(root, ROL_CLIENTE)
     root.mainloop()
