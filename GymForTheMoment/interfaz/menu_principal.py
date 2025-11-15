@@ -1,7 +1,4 @@
 import tkinter as tk
-from tkinter import ttk
-
-# Submenús
 from interfaz.clientes.aparatos import VentanaAparatos
 from interfaz.clientes.clases import VentanaClases
 from interfaz.clientes.rutinas import VentanaRutinas
@@ -14,119 +11,91 @@ from interfaz.administradores.notificaciones import VentanaNotificaciones
 
 from utilidades.constantes import ROL_CLIENTE, ROL_ADMINISTRADOR
 
-
 class MenuPrincipal:
-    def __init__(self, root, rol):
+    def __init__(self, root, rol, nombre_usuario):
         self.root = root
         self.rol = rol
+        self.nombre_usuario = nombre_usuario
 
-        # --- CONFIG VENTANA ---
+        # Configuración ventana
         self.root.title("Gym For The Moment - Menú Principal")
         self.root.geometry("1000x700")
         self.root.configure(bg="#FFFFFF")
         self.root.resizable(False, False)
 
-        self._configurar_estilos()
         self._construir_interfaz()
 
-    # ------------------------------
-    #       ESTILOS TTK
-    # ------------------------------
-    def _configurar_estilos(self):
-        style = ttk.Style()
-        style.theme_use("clam")
-
-        style.configure("TLabel",
-                        background="#F5F5F5",
-                        foreground="#222222",
-                        font=("Segoe UI", 12))
-
-        style.configure("TButton",
-                        background="#333333",
-                        foreground="#FFFFFF",
-                        font=("Segoe UI", 12, "bold"),
-                        padding=10)
-
-        style.map("TButton",
-                  background=[("active", "#555555")],
-                  foreground=[("active", "white")])
-
-    # ------------------------------
-    #  CONSTRUCCIÓN DE INTERFAZ
-    # ------------------------------
     def _construir_interfaz(self):
+        # Título app
+        tk.Label(self.root, text="GYM FOR THE MOMENT", bg="#FFFFFF", fg="#222222",
+                 font=("Segoe UI", 24, "bold")).pack(pady=(30, 5))
 
-        # --- Sombra de tarjeta ---
-        sombra = tk.Frame(self.root, bg="#CCCCCC")
-        sombra.place(relx=0.5, rely=0.5, anchor="center", width=700, height=500)
+        # Subtítulo de bienvenida
+        tk.Label(self.root, text=f"Bienvenido, {self.nombre_usuario}!", bg="#FFFFFF",
+                 fg="#444444", font=("Segoe UI", 16, "bold")).pack(pady=(0, 20))
 
-        # --- Tarjeta principal ---
-        tarjeta = tk.Frame(self.root, bg="#F5F5F5")
-        tarjeta.place(relx=0.5, rely=0.5, anchor="center", width=690, height=490)
+        # Botón cerrar sesión arriba a la derecha
+        cerrar_sesion_btn = tk.Button(self.root, text="Cerrar Sesión", bg="#CC3333", fg="white",
+                                      font=("Segoe UI", 12, "bold"), command=self._cerrar_sesion)
+        cerrar_sesion_btn.place(relx=0.9, rely=0.05, anchor="ne")
+        cerrar_sesion_btn.bind("<Enter>", lambda e: cerrar_sesion_btn.config(bg="#AA0000"))
+        cerrar_sesion_btn.bind("<Leave>", lambda e: cerrar_sesion_btn.config(bg="#CC3333"))
 
-        # Título
-        tk.Label(tarjeta,
-                 text="GYM FOR THE MOMENT",
-                 bg="#F5F5F5",
-                 fg="#222222",
-                 font=("Segoe UI", 24, "bold")).pack(pady=(40, 10))
+        # Contenedor de tarjetas
+        contenedor = tk.Frame(self.root, bg="#FFFFFF")
+        contenedor.pack(expand=True, fill="both", pady=20, padx=50)
 
-        tk.Label(tarjeta,
-                 text=f"Menú Principal - Rol: {self.rol.upper()}",
-                 bg="#F5F5F5",
-                 fg="#444444",
-                 font=("Segoe UI", 15, "bold")).pack(pady=(0, 30))
-
-        # Contenedor de botones
-        contenedor_botones = tk.Frame(tarjeta, bg="#F5F5F5")
-        contenedor_botones.pack()
-
-        # --- BOTONES SEGÚN ROL ---
         if self.rol == ROL_CLIENTE:
-            self._construir_botones_cliente(contenedor_botones)
-        elif self.rol == ROL_ADMINISTRADOR:
-            self._construir_botones_admin(contenedor_botones)
+            opciones = [
+                ("Ver Aparatos", self.abrir_aparatos, "#FFB74D"),
+                ("Ver Clases / Sesiones", self.abrir_clases, "#64B5F6"),
+                ("Ver Rutinas", self.abrir_rutinas, "#81C784"),
+                ("Pasarela de Pagos", self.abrir_pagos, "#BA68C8"),
+            ]
         else:
-            tk.Label(tarjeta, text="Rol desconocido", fg="red", bg="#F5F5F5").pack()
+            opciones = [
+                ("Gestión de Usuarios", self.abrir_gestion_usuarios, "#64B5F6"),
+                ("Gestión de Reservas", self.abrir_gestion_reservas, "#FFB74D"),
+                ("Gestión de Recibos", self.abrir_gestion_recibos, "#81C784"),
+                ("Notificaciones", self.abrir_notificaciones, "#BA68C8"),
+            ]
+
+        self._crear_tarjetas(contenedor, opciones)
 
         # Pie de página
-        tk.Label(tarjeta,
-                 text="© 2025 Gym For The Moment",
-                 bg="#F5F5F5",
-                 fg="#555555",
-                 font=("Segoe UI", 10)).pack(side="bottom", pady=20)
+        tk.Label(self.root, text="© 2025 Gym For The Moment", bg="#FFFFFF",
+                 fg="#555555", font=("Segoe UI", 10)).pack(side="bottom", pady=10)
 
-    # ------------------------------
-    #       BOTONES CLIENTE
-    # ------------------------------
-    def _construir_botones_cliente(self, parent):
-        opciones = [
-            ("Ver Aparatos", self.abrir_aparatos),
-            ("Ver Clases / Sesiones", self.abrir_clases),
-            ("Ver Rutinas", self.abrir_rutinas),
-            ("Pasarela de Pagos", self.abrir_pagos),
-        ]
+    def _crear_tarjetas(self, parent, opciones):
+        filas = 2
+        columnas = 2
+        index = 0
+        for fila in range(filas):
+            row_frame = tk.Frame(parent, bg="#FFFFFF")
+            row_frame.pack(expand=True, fill="both")
+            for col in range(columnas):
+                if index >= len(opciones):
+                    break
+                texto, comando, color = opciones[index]
+                tarjeta = tk.Frame(row_frame, bg=color, width=200, height=120)
+                tarjeta.pack(side="left", padx=20, pady=20, expand=True, fill="both")
+                tarjeta.pack_propagate(False)
+                btn = tk.Button(tarjeta, text=texto, bg=color, fg="white",
+                                font=("Segoe UI", 14, "bold"), bd=0, command=comando)
+                btn.pack(expand=True, fill="both")
+                # Hover
+                btn.bind("<Enter>", lambda e, b=btn: b.config(bg="#555555"))
+                btn.bind("<Leave>", lambda e, b=btn, c=color: b.config(bg=c))
+                index += 1
 
-        for texto, comando in opciones:
-            ttk.Button(parent, text=texto, command=comando).pack(fill="x", padx=150, pady=10)
+    def _cerrar_sesion(self):
+        self.root.destroy()
+        from interfaz.login import Login
+        root_login = tk.Tk()
+        Login(root_login)
+        root_login.mainloop()
 
-    # ------------------------------
-    #     BOTONES ADMINISTRADOR
-    # ------------------------------
-    def _construir_botones_admin(self, parent):
-        opciones = [
-            ("Gestión de Usuarios", self.abrir_gestion_usuarios),
-            ("Gestión de Reservas", self.abrir_gestion_reservas),
-            ("Gestión de Recibos", self.abrir_gestion_recibos),
-            ("Notificaciones", self.abrir_notificaciones),
-        ]
-
-        for texto, comando in opciones:
-            ttk.Button(parent, text=texto, command=comando).pack(fill="x", padx=150, pady=10)
-
-    # ------------------------------
-    #     VENTANAS SECUNDARIAS
-    # ------------------------------
+    # VENTANAS SECUNDARIAS
     def abrir_aparatos(self):
         ventana = tk.Toplevel(self.root)
         VentanaAparatos(ventana)
@@ -158,9 +127,3 @@ class MenuPrincipal:
     def abrir_notificaciones(self):
         ventana = tk.Toplevel(self.root)
         VentanaNotificaciones(ventana)
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    MenuPrincipal(root, ROL_CLIENTE)
-    root.mainloop()

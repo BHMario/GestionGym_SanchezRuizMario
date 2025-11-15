@@ -56,7 +56,7 @@ class ServicioClientes:
         return [Cliente(*f) for f in filas]
 
     def crear_usuarios_iniciales(self):
-        if not self.obtener_cliente_por_usuario("cliente"):
-            self.agregar_cliente("cliente", "cliente@gym.com", "cliente123", pagado=True, rol="cliente")
-        if not self.obtener_cliente_por_usuario("admin"):
-            self.agregar_cliente("admin", "admin@gym.com", "admin123", pagado=True, rol="administrador")
+        if not self.obtener_cliente_por_usuario("Cliente1"):
+            self.agregar_cliente("Cliente1", "cliente@gym.com", "cliente123", pagado=True, rol="cliente")
+        if not self.obtener_cliente_por_usuario("Admin"):
+            self.agregar_cliente("Admin", "admin@gym.com", "admin123", pagado=True, rol="administrador")

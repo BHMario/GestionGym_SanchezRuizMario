@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from servicios.servicio_usuarios import ServicioUsuarios
+from servicios.servicio_clientes import ServicioClientes
 from interfaz.menu_principal import MenuPrincipal
 
 class Login:
@@ -11,11 +11,16 @@ class Login:
         self.root.resizable(False, False)
         self.root.configure(bg="#FFFFFF")  # Fondo blanco
 
-        self.servicio_usuarios = ServicioUsuarios()
+        # --- Servicio de clientes ---
+        self.servicio_clientes = ServicioClientes()
+        self.servicio_clientes.crear_usuarios_iniciales()  # <--- asegura que los usuarios existan
 
         self._configurar_estilos()
         self._construir_interfaz()
 
+    # ------------------------------
+    # Configuración de estilos TTK
+    # ------------------------------
     def _configurar_estilos(self):
         style = ttk.Style()
         style.theme_use("clam")
@@ -30,6 +35,9 @@ class Login:
                   background=[("active", "#555555")],
                   foreground=[("active", "white")])
 
+    # ------------------------------
+    # Construcción de la interfaz
+    # ------------------------------
     def _construir_interfaz(self):
         sombra = tk.Frame(self.root, bg="#CCCCCC")
         sombra.place(relx=0.5, rely=0.5, anchor="center", width=450, height=480)
@@ -56,6 +64,9 @@ class Login:
 
         tk.Label(self.marco, text="© 2025 Gym For The Moment", bg="#F5F5F5", fg="#555555", font=("Segoe UI", 10)).pack(side="bottom", pady=15)
 
+    # ------------------------------
+    # Lógica de login
+    # ------------------------------
     def login_usuario(self):
         self.label_error.config(text="")
         usuario = self.entry_usuario.get().strip()
@@ -65,19 +76,22 @@ class Login:
             self.label_error.config(text="Debe completar todos los campos")
             return
 
-        usuario_db = self.servicio_usuarios.obtener_usuario_por_usuario(usuario)
+        usuario_db = self.servicio_clientes.obtener_cliente_por_usuario(usuario)
 
-        if usuario_db and contrasena == usuario_db["contrasena"]:
-            rol = usuario_db["rol"]
+        if usuario_db and contrasena == usuario_db.contrasena:
+            rol = usuario_db.rol
         else:
             self.label_error.config(text="Usuario o contraseña incorrectos")
             return
 
         self.root.destroy()
         root_menu = tk.Tk()
-        MenuPrincipal(root_menu, rol)
+        MenuPrincipal(root_menu, rol, usuario_db.usuario)  # <-- ahora pasamos el nombre para la bienvenida
         root_menu.mainloop()
 
+    # ------------------------------
+    # Abrir ventana de registro
+    # ------------------------------
     def abrir_registro(self):
         from interfaz.registro import Registro
         self.root.withdraw()
