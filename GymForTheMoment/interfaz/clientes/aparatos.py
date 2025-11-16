@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_aparatos import ServicioAparatos
+from servicios.servicio_reservas import ServicioReservas
 
 def aclarar_color(hex_color, factor=0.2):
     """Aclara un color hexadecimal"""
@@ -18,6 +19,7 @@ class VentanaAparatos:
         self.root.geometry("1000x700")
         self.root.configure(bg="#FFFFFF")
         self.servicio_aparatos = ServicioAparatos()
+        self.servicio_reservas = ServicioReservas()  # Para notificaciones
 
         self._configurar_estilos()
         self._construir_interfaz()
@@ -139,34 +141,43 @@ class VentanaAparatos:
                 index += 1
 
     # ----------------------
-    # Detalles de aparato con estilos y mensaje en la misma ventana
+    # Detalles de aparato con Toplevel y mensaje de notificación
     # ----------------------
     def _detalle_aparato(self, aparato):
-        detalle_frame = tk.Frame(self.root, bg="#FFFFFF")
-        detalle_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+        ventana_detalle = tk.Toplevel(self.root)
+        ventana_detalle.title(f"{aparato.nombre} - Detalle")
+        ventana_detalle.geometry("500x450")
+        ventana_detalle.configure(bg="#FFFFFF")
 
         # Botón volver
-        tk.Button(detalle_frame, text="← Volver", bg="#333333", fg="white",
-                  font=("Segoe UI", 12, "bold"), command=detalle_frame.destroy).pack(anchor="nw", padx=20, pady=20)
+        tk.Button(ventana_detalle, text="← Volver", bg="#333333", fg="white",
+                  font=("Segoe UI", 12, "bold"), command=ventana_detalle.destroy).pack(anchor="nw", padx=20, pady=20)
 
-        tk.Label(detalle_frame, text=aparato.nombre, bg="#FFFFFF", fg="#222222",
+        tk.Label(ventana_detalle, text=aparato.nombre, bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 20, "bold")).pack(pady=20)
-        tk.Label(detalle_frame, text=f"{aparato.descripcion}", bg="#FFFFFF", fg="#444444",
+        tk.Label(ventana_detalle, text=f"{aparato.descripcion}", bg="#FFFFFF", fg="#444444",
                  font=("Segoe UI", 12), justify="left", wraplength=450).pack(pady=10)
-        tk.Label(detalle_frame, text=f"Estado: {'Libre' if not aparato.ocupado else 'Ocupado'}",
+        tk.Label(ventana_detalle, text=f"Estado: {'Libre' if not aparato.ocupado else 'Ocupado'}",
                  bg="#FFFFFF", fg="#444444", font=("Segoe UI", 12, "bold")).pack(pady=10)
 
         # Label para mostrar mensaje de reserva
-        self.msg_reserva = tk.Label(detalle_frame, text="", bg="#FFFFFF", fg="green",
-                                    font=("Segoe UI", 12, "bold"))
-        self.msg_reserva.pack(pady=10)
+        msg_reserva = tk.Label(ventana_detalle, text="", bg="#FFFFFF", fg="green",
+                               font=("Segoe UI", 12, "bold"))
+        msg_reserva.pack(pady=10)
 
-        tk.Button(detalle_frame, text="Solicitar Reserva", bg="#64B5F6", fg="white",
+        # Botón solicitar reserva
+        tk.Button(ventana_detalle, text="Solicitar Reserva", bg="#64B5F6", fg="white",
                   font=("Segoe UI", 12, "bold"),
-                  command=lambda: self._solicitar_reserva(aparato)).pack(pady=20)
+                  command=lambda: self._solicitar_reserva(aparato, msg_reserva)).pack(pady=20)
 
-    def _solicitar_reserva(self, aparato):
-        # Mostrar mensaje en la misma ventana
-        self.msg_reserva.config(text=f"Su solicitud para '{aparato.nombre}' ha sido enviada al administrador", fg="green")
-        # Notificación al admin (puede ser print o log)
+    def _solicitar_reserva(self, aparato, msg_label):
+        # Crear la reserva en la base de datos
+        # Aquí asumimos que tenemos un cliente logueado, por ejemplo "usuario1"
+        cliente_actual = "usuario1"  # Cambiar según tu sistema de login
+        import datetime
+        hora_actual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.servicio_reservas.crear_reserva(cliente_actual, aparato.nombre, hora_actual)
+
+        # Mostrar mensaje al cliente
+        msg_label.config(text=f"Su solicitud para '{aparato.nombre}' ha sido enviada al administrador", fg="green")
         print(f"Notificación: Solicitud de reserva para '{aparato.nombre}' enviada al administrador")

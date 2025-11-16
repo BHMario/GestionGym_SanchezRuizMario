@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import messagebox
 from servicios.servicio_reservas import ServicioReservas
 
 class VentanaNotificaciones:
@@ -16,10 +15,16 @@ class VentanaNotificaciones:
 
         tk.Button(root, text="Actualizar", command=self.cargar_notificaciones).pack(pady=5)
 
+        # Actualiza automáticamente cada 5 segundos
         self.cargar_notificaciones()
+        self.root.after(5000, self.actualizar_periodicamente)
 
     def cargar_notificaciones(self):
         self.listbox.delete(0, tk.END)
         solicitudes = self.servicio_reservas.listar_solicitudes_pendientes()
         for s in solicitudes:
             self.listbox.insert(tk.END, f"{s.id} - {s.cliente} - {s.aparato} - {s.hora} - {s.estado}")
+
+    def actualizar_periodicamente(self):
+        self.cargar_notificaciones()
+        self.root.after(5000, self.actualizar_periodicamente)

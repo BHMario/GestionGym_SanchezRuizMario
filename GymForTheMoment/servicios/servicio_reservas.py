@@ -40,6 +40,14 @@ class ServicioReservas:
     def listar_solicitudes_pendientes(self):
         return self.listar_reservas_pendientes()
 
+    def crear_reserva(self, cliente, aparato, hora):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO reservas (cliente, aparato, hora, estado) VALUES (?, ?, ?, ?)",
+                       (cliente, aparato, hora, "pendiente"))
+        conn.commit()
+        conn.close()
+
     def aceptar_reserva(self, reserva):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
