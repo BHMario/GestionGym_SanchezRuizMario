@@ -1,5 +1,7 @@
 import sqlite3
 from modelos.aparato import Aparato
+import threading
+import time
 
 class ServicioAparatos:
     def __init__(self, db_path="gimnasio.db"):
@@ -51,7 +53,6 @@ class ServicioAparatos:
                 INSERT INTO aparatos (nombre, descripcion, ocupado, musculo)
                 VALUES (?, ?, ?, ?)
             """, aparatos_iniciales)
-
             conn.commit()
         conn.close()
 
@@ -62,3 +63,24 @@ class ServicioAparatos:
         filas = cursor.fetchall()
         conn.close()
         return [Aparato(f[0], f[1], bool(f[3]), f[2], f[4]) for f in filas]
+
+    def marcar_ocupado(self, nombre_aparato, minutos=30):
+        """Marca un aparato como ocupado y lo libera automáticamente después de X minutos"""
+        def ocupacion_temporal():
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("UPDATE aparatos SET ocupado=1 WHERE nombre=?", (nombre_aparato,))
+            conn.commit()
+            conn.close()
+
+            # Esperar los minutos especificados
+            time.sleep(minutos * 60)
+
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("UPDATE aparatos SET ocupado=0 WHERE nombre=?", (nombre_aparato,))
+            conn.commit()
+            conn.close()
+
+        # Ejecutar en hilo separado para no bloquear la interfaz
+        threading.Thread(target=ocupacion_temporal, daemon=True).start()

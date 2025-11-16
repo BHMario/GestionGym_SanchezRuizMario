@@ -2,9 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_aparatos import ServicioAparatos
 from servicios.servicio_reservas import ServicioReservas
+import datetime
 
 def aclarar_color(hex_color, factor=0.2):
-    """Aclara un color hexadecimal"""
     hex_color = hex_color.lstrip("#")
     r, g, b = int(hex_color[:2], 16), int(hex_color[2:4], 16), int(hex_color[4:], 16)
     r = min(255, int(r + (255 - r) * factor))
@@ -39,7 +39,6 @@ class VentanaAparatos:
         tk.Button(self.root, text="Volver al Menú", bg="#333333", fg="white",
                   font=("Segoe UI", 12, "bold"), command=self.root.destroy).place(relx=0.95, rely=0.05, anchor="ne")
 
-        # Canvas + Scrollbar
         self.canvas = tk.Canvas(self.root, bg="#FFFFFF", highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
@@ -50,8 +49,6 @@ class VentanaAparatos:
         self.window_id = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfigure(self.window_id, width=e.width))
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
-
-        # Scroll limitado
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_limited)
 
         self.root.update_idletasks()
@@ -115,17 +112,14 @@ class VentanaAparatos:
                 tarjeta.pack(side="left", padx=20, expand=True, fill="both")
                 tarjeta.pack_propagate(False)
 
-                # Label del nombre
                 nombre_label = tk.Label(tarjeta, text=aparato.nombre, bg=color_base, fg="white",
                                         font=("Segoe UI", 14, "bold"), wraplength=180, justify="center")
                 nombre_label.pack(expand=True, fill="both")
 
-                # Botón detalle
                 tk.Button(tarjeta, text="Ver Detalle / Reservar", bg="#FFFFFF", fg="#222222",
                           font=("Segoe UI", 12, "bold"), bd=0,
                           command=lambda a=aparato: self._detalle_aparato(a)).pack(expand=False, fill="x", padx=10, pady=10)
 
-                # Hover: cambiar color de tarjeta y label simultáneamente
                 def on_enter(e, t=tarjeta, l=nombre_label, c=color_base):
                     hover_color = aclarar_color(c, 0.3)
                     t.configure(bg=hover_color)
@@ -140,16 +134,12 @@ class VentanaAparatos:
 
                 index += 1
 
-    # ----------------------
-    # Detalles de aparato con Toplevel y mensaje de notificación
-    # ----------------------
     def _detalle_aparato(self, aparato):
         ventana_detalle = tk.Toplevel(self.root)
         ventana_detalle.title(f"{aparato.nombre} - Detalle")
         ventana_detalle.geometry("500x450")
         ventana_detalle.configure(bg="#FFFFFF")
 
-        # Botón volver
         tk.Button(ventana_detalle, text="← Volver", bg="#333333", fg="white",
                   font=("Segoe UI", 12, "bold"), command=ventana_detalle.destroy).pack(anchor="nw", padx=20, pady=20)
 
@@ -160,24 +150,17 @@ class VentanaAparatos:
         tk.Label(ventana_detalle, text=f"Estado: {'Libre' if not aparato.ocupado else 'Ocupado'}",
                  bg="#FFFFFF", fg="#444444", font=("Segoe UI", 12, "bold")).pack(pady=10)
 
-        # Label para mostrar mensaje de reserva
         msg_reserva = tk.Label(ventana_detalle, text="", bg="#FFFFFF", fg="green",
                                font=("Segoe UI", 12, "bold"))
         msg_reserva.pack(pady=10)
 
-        # Botón solicitar reserva
         tk.Button(ventana_detalle, text="Solicitar Reserva", bg="#64B5F6", fg="white",
                   font=("Segoe UI", 12, "bold"),
                   command=lambda: self._solicitar_reserva(aparato, msg_reserva)).pack(pady=20)
 
     def _solicitar_reserva(self, aparato, msg_label):
-        # Crear la reserva en la base de datos
-        # Aquí asumimos que tenemos un cliente logueado, por ejemplo "usuario1"
-        cliente_actual = "usuario1"  # Cambiar según tu sistema de login
-        import datetime
+        cliente_actual = "usuario1"  # Cambiar según sistema login
         hora_actual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.servicio_reservas.crear_reserva(cliente_actual, aparato.nombre, hora_actual)
-
-        # Mostrar mensaje al cliente
         msg_label.config(text=f"Su solicitud para '{aparato.nombre}' ha sido enviada al administrador", fg="green")
         print(f"Notificación: Solicitud de reserva para '{aparato.nombre}' enviada al administrador")

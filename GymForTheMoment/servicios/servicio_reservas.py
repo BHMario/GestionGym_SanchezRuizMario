@@ -1,9 +1,13 @@
 import sqlite3
 from modelos.reserva import Reserva
+from servicios.servicio_aparatos import ServicioAparatos
+import threading
+import time
 
 class ServicioReservas:
     def __init__(self, db_path="gimnasio.db"):
         self.db_path = db_path
+        self.servicio_aparatos = ServicioAparatos()
         self._crear_tabla()
 
     def _crear_tabla(self):
@@ -49,11 +53,15 @@ class ServicioReservas:
         conn.close()
 
     def aceptar_reserva(self, reserva):
+        # Cambiar estado a aceptada
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("UPDATE reservas SET estado='aceptada' WHERE id=?", (reserva.id,))
         conn.commit()
         conn.close()
+
+        # Marcar aparato como ocupado durante 30 minutos
+        self.servicio_aparatos.marcar_ocupado(reserva.aparato, minutos=30)
 
     def denegar_reserva(self, reserva):
         conn = sqlite3.connect(self.db_path)
