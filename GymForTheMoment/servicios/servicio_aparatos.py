@@ -1,7 +1,7 @@
 import sqlite3
-from modelos.aparato import Aparato
 import threading
 import time
+from modelos.aparato import Aparato
 
 class ServicioAparatos:
     def __init__(self, db_path="gimnasio.db"):
@@ -53,6 +53,7 @@ class ServicioAparatos:
                 INSERT INTO aparatos (nombre, descripcion, ocupado, musculo)
                 VALUES (?, ?, ?, ?)
             """, aparatos_iniciales)
+
             conn.commit()
         conn.close()
 
@@ -64,23 +65,36 @@ class ServicioAparatos:
         conn.close()
         return [Aparato(f[0], f[1], bool(f[3]), f[2], f[4]) for f in filas]
 
-    def marcar_ocupado(self, nombre_aparato, minutos=30):
-        """Marca un aparato como ocupado y lo libera automáticamente después de X minutos"""
+    def obtener_aparato_por_nombre(self, nombre):
+        """Devuelve un objeto Aparato por su nombre (o None)."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, descripcion, ocupado, musculo FROM aparatos WHERE nombre=?", (nombre,))
+        fila = cursor.fetchone()
+        conn.close()
+        if fila:
+            return Aparato(fila[0], fila[1], bool(fila[3]), fila[2], fila[4])
+        return None
+
+    def marcar_ocupado_por_nombre(self, nombre, minutos=30):
+        """
+        Marca el aparato con 'nombre' como ocupado y lanza un hilo que lo libera tras `minutos`.
+        """
         def ocupacion_temporal():
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("UPDATE aparatos SET ocupado=1 WHERE nombre=?", (nombre_aparato,))
+            cursor.execute("UPDATE aparatos SET ocupado=1 WHERE nombre=?", (nombre,))
             conn.commit()
             conn.close()
 
-            # Esperar los minutos especificados
+            # Dormimos `minutos` minutos y luego liberamos la máquina
             time.sleep(minutos * 60)
 
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("UPDATE aparatos SET ocupado=0 WHERE nombre=?", (nombre_aparato,))
+            cursor.execute("UPDATE aparatos SET ocupado=0 WHERE nombre=?", (nombre,))
             conn.commit()
             conn.close()
 
-        # Ejecutar en hilo separado para no bloquear la interfaz
+        # Iniciar hilo daemon para no bloquear
         threading.Thread(target=ocupacion_temporal, daemon=True).start()
