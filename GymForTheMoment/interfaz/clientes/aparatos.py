@@ -13,13 +13,15 @@ def aclarar_color(hex_color, factor=0.2):
     return f"#{r:02X}{g:02X}{b:02X}"
 
 class VentanaAparatos:
-    def __init__(self, root):
+    def __init__(self, root, cliente_actual="usuario1"):
         self.root = root
         self.root.title("Aparatos - Gym For The Moment")
         self.root.geometry("1000x700")
         self.root.configure(bg="#FFFFFF")
+        self.cliente_actual = cliente_actual
+
         self.servicio_aparatos = ServicioAparatos()
-        self.servicio_reservas = ServicioReservas()  # Para notificaciones
+        self.servicio_reservas = ServicioReservas()
 
         self._configurar_estilos()
         self._construir_interfaz()
@@ -47,6 +49,7 @@ class VentanaAparatos:
 
         self.scrollable_frame = tk.Frame(self.canvas, bg="#FFFFFF")
         self.window_id = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfigure(self.window_id, width=e.width))
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_limited)
@@ -62,20 +65,17 @@ class VentanaAparatos:
         self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def _cargar_aparatos_tarjetas(self):
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
         aparatos = self.servicio_aparatos.listar_aparatos()
         filas = (len(aparatos) + 2) // 3
         index = 0
 
         color_musculo = {
-            "cuádriceps": "#FF8A65",
-            "isquiotibiales": "#4DB6AC",
-            "pecho": "#F06292",
-            "hombros": "#BA68C8",
-            "espalda": "#64B5F6",
-            "cardio": "#81C784",
-            "abductores": "#FFD54F",
-            "aductores": "#A1887F",
-            "otros": "#90A4AE"
+            "cuádriceps": "#FF8A65", "isquiotibiales": "#4DB6AC", "pecho": "#F06292",
+            "hombros": "#BA68C8", "espalda": "#64B5F6", "cardio": "#81C784",
+            "abductores": "#FFD54F", "aductores": "#A1887F", "otros": "#90A4AE"
         }
 
         for fila in range(filas):
@@ -85,30 +85,15 @@ class VentanaAparatos:
             for col in range(3):
                 if index >= len(aparatos):
                     break
-
                 aparato = aparatos[index]
-
                 nombre = aparato.nombre.lower()
-                if "cuádriceps" in nombre:
-                    color_base = color_musculo["cuádriceps"]
-                elif "curl femoral" in nombre:
-                    color_base = color_musculo["isquiotibiales"]
-                elif "press banca" in nombre or "pectoral" in nombre:
-                    color_base = color_musculo["pecho"]
-                elif "militar" in nombre:
-                    color_base = color_musculo["hombros"]
-                elif "remo" in nombre or "dorsalera" in nombre:
-                    color_base = color_musculo["espalda"]
-                elif "elíptica" in nombre or "bicicleta" in nombre or "cinta" in nombre:
-                    color_base = color_musculo["cardio"]
-                elif "abductor" in nombre:
-                    color_base = color_musculo["abductores"]
-                elif "aductor" in nombre:
-                    color_base = color_musculo["aductores"]
-                else:
-                    color_base = color_musculo["otros"]
+                color_base = color_musculo["otros"]
+                for key, color in color_musculo.items():
+                    if key in nombre:
+                        color_base = color
+                        break
 
-                tarjeta = tk.Frame(row_frame, bg=color_base, width=200, height=300, bd=0, relief="ridge")
+                tarjeta = tk.Frame(row_frame, bg=color_base, width=200, height=300, bd=0)
                 tarjeta.pack(side="left", padx=20, expand=True, fill="both")
                 tarjeta.pack_propagate(False)
 
@@ -118,20 +103,12 @@ class VentanaAparatos:
 
                 tk.Button(tarjeta, text="Ver Detalle / Reservar", bg="#FFFFFF", fg="#222222",
                           font=("Segoe UI", 12, "bold"), bd=0,
-                          command=lambda a=aparato: self._detalle_aparato(a)).pack(expand=False, fill="x", padx=10, pady=10)
+                          command=lambda a=aparato: self._detalle_aparato(a)).pack(fill="x", padx=10, pady=10)
 
-                def on_enter(e, t=tarjeta, l=nombre_label, c=color_base):
-                    hover_color = aclarar_color(c, 0.3)
-                    t.configure(bg=hover_color)
-                    l.configure(bg=hover_color)
-
-                def on_leave(e, t=tarjeta, l=nombre_label, c=color_base):
-                    t.configure(bg=c)
-                    l.configure(bg=c)
-
-                tarjeta.bind("<Enter>", on_enter)
-                tarjeta.bind("<Leave>", on_leave)
-
+                tarjeta.bind("<Enter>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
+                             (t.configure(bg=aclarar_color(c, 0.3)), l.configure(bg=aclarar_color(c, 0.3))))
+                tarjeta.bind("<Leave>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
+                             (t.configure(bg=c), l.configure(bg=c)))
                 index += 1
 
     def _detalle_aparato(self, aparato):
@@ -147,8 +124,11 @@ class VentanaAparatos:
                  font=("Segoe UI", 20, "bold")).pack(pady=20)
         tk.Label(ventana_detalle, text=f"{aparato.descripcion}", bg="#FFFFFF", fg="#444444",
                  font=("Segoe UI", 12), justify="left", wraplength=450).pack(pady=10)
-        tk.Label(ventana_detalle, text=f"Estado: {'Libre' if not aparato.ocupado else 'Ocupado'}",
-                 bg="#FFFFFF", fg="#444444", font=("Segoe UI", 12, "bold")).pack(pady=10)
+
+        estado_label = tk.Label(ventana_detalle,
+                                text=f"Estado: {'Libre' if not aparato.ocupado else 'Ocupado'}",
+                                bg="#FFFFFF", fg="#444444", font=("Segoe UI", 12, "bold"))
+        estado_label.pack(pady=10)
 
         msg_reserva = tk.Label(ventana_detalle, text="", bg="#FFFFFF", fg="green",
                                font=("Segoe UI", 12, "bold"))
@@ -156,11 +136,25 @@ class VentanaAparatos:
 
         tk.Button(ventana_detalle, text="Solicitar Reserva", bg="#64B5F6", fg="white",
                   font=("Segoe UI", 12, "bold"),
-                  command=lambda: self._solicitar_reserva(aparato, msg_reserva)).pack(pady=20)
+                  command=lambda: self._solicitar_reserva(aparato, msg_reserva, estado_label)).pack(pady=20)
 
-    def _solicitar_reserva(self, aparato, msg_label):
-        cliente_actual = "usuario1"  # Cambiar según sistema login
+        self._actualizar_estado_periodico(aparato, estado_label, ventana_detalle)
+
+    def _actualizar_estado_periodico(self, aparato, estado_label, ventana):
+        if not ventana.winfo_exists():
+            return
+
+        aparato_actualizado = self.servicio_aparatos.obtener_aparato_por_nombre(aparato.nombre)
+        if aparato_actualizado:
+            estado_label.config(text=f"Estado: {'Libre' if not aparato_actualizado.ocupado else 'Ocupado'}")
+        ventana.after(1000, lambda: self._actualizar_estado_periodico(aparato, estado_label, ventana))
+
+    def _solicitar_reserva(self, aparato, msg_label, estado_label):
+        if aparato.ocupado:
+            msg_label.config(text=f"Lo sentimos, '{aparato.nombre}' ya está ocupado.", fg="red")
+            return
+
         hora_actual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.servicio_reservas.crear_reserva(cliente_actual, aparato.nombre, hora_actual)
+        self.servicio_reservas.crear_reserva(self.cliente_actual, aparato.nombre, hora_actual)
         msg_label.config(text=f"Su solicitud para '{aparato.nombre}' ha sido enviada al administrador", fg="green")
-        print(f"Notificación: Solicitud de reserva para '{aparato.nombre}' enviada al administrador")
+        print(f"Notificación: Solicitud de reserva para '{aparato.nombre}' enviada por {self.cliente_actual}")

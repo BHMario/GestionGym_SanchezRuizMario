@@ -19,8 +19,7 @@ class VentanaClases:
         self.root.geometry("1000x700")
         self.root.configure(bg="#FFFFFF")
 
-        self.cliente_actual = cliente_actual  # ← ahora el cliente aparece en la notificación
-
+        self.cliente_actual = cliente_actual
         self.servicio_clases = ServicioClases()
         self.servicio_reservas = ServicioReservas()
 
@@ -36,7 +35,6 @@ class VentanaClases:
     def _construir_interfaz(self):
         tk.Label(self.root, text="GYM FOR THE MOMENT", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 24, "bold")).pack(pady=(30, 10))
-
         tk.Label(self.root, text="Listado de Clases Disponibles", bg="#FFFFFF", fg="#444444",
                  font=("Segoe UI", 16, "bold")).pack(pady=(0, 20))
 
@@ -51,10 +49,8 @@ class VentanaClases:
 
         self.scrollable_frame = tk.Frame(self.canvas, bg="#FFFFFF")
         self.window_id = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfigure(self.window_id, width=e.width))
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
-
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_limited)
 
         self.root.update_idletasks()
@@ -103,7 +99,6 @@ class VentanaClases:
 
                 tarjeta.bind("<Enter>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
                              (t.configure(bg=aclarar_color(c, 0.3)), l.configure(bg=aclarar_color(c, 0.3))))
-
                 tarjeta.bind("<Leave>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
                              (t.configure(bg=c), l.configure(bg=c)))
 
@@ -137,7 +132,6 @@ class VentanaClases:
                   font=("Segoe UI", 12, "bold"),
                   command=lambda: self._solicitar_reserva(clase, msg_reserva, estado_label)).pack(pady=20)
 
-        # 🔄 Actualizar estado cada segundo
         self._actualizar_estado_periodico(clase, estado_label, ventana_detalle)
 
     def _actualizar_estado_periodico(self, clase, estado_label, ventana):
@@ -154,11 +148,14 @@ class VentanaClases:
         ventana.after(1000, lambda: self._actualizar_estado_periodico(clase, estado_label, ventana))
 
     def _solicitar_reserva(self, clase, msg_label, estado_label):
-        hora_actual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        clase_actualizada = self.servicio_clases.obtener_clase_por_nombre(clase.nombre)
 
-        # ✔ ahora se muestra el cliente correcto al admin
+        if clase_actualizada.ocupado:
+            msg_label.config(text=f"Lo sentimos, '{clase.nombre}' ya está ocupada.", fg="red")
+            return
+
+        hora_actual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.servicio_reservas.crear_reserva(self.cliente_actual, clase.nombre, hora_actual)
 
         msg_label.config(text=f"Su solicitud para '{clase.nombre}' ha sido enviada al administrador", fg="green")
-
-        print(f"Notificación: Solicitud de reserva para '{clase.nombre}' enviada al administrador por {self.cliente_actual}")
+        print(f"Notificación: Solicitud de reserva para '{clase.nombre}' enviada por {self.cliente_actual}")
