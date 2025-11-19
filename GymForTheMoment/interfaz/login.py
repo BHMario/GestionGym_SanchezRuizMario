@@ -9,18 +9,14 @@ class Login:
         self.root.title("Gym For The Moment - Inicio de Sesión")
         self.root.geometry("1100x750")
         self.root.resizable(False, False)
-        self.root.configure(bg="#FFFFFF")  # Fondo blanco
+        self.root.configure(bg="#FFFFFF")
 
-        # --- Servicio de clientes ---
         self.servicio_clientes = ServicioClientes()
-        self.servicio_clientes.crear_usuarios_iniciales()  # <--- asegura que los usuarios existan
+        self.servicio_clientes.crear_usuarios_iniciales()  # asegurar que los usuarios existan
 
         self._configurar_estilos()
         self._construir_interfaz()
 
-    # ------------------------------
-    # Configuración de estilos TTK
-    # ------------------------------
     def _configurar_estilos(self):
         style = ttk.Style()
         style.theme_use("clam")
@@ -35,9 +31,6 @@ class Login:
                   background=[("active", "#555555")],
                   foreground=[("active", "white")])
 
-    # ------------------------------
-    # Construcción de la interfaz
-    # ------------------------------
     def _construir_interfaz(self):
         sombra = tk.Frame(self.root, bg="#CCCCCC")
         sombra.place(relx=0.5, rely=0.5, anchor="center", width=450, height=480)
@@ -64,9 +57,6 @@ class Login:
 
         tk.Label(self.marco, text="© 2025 Gym For The Moment", bg="#F5F5F5", fg="#555555", font=("Segoe UI", 10)).pack(side="bottom", pady=15)
 
-    # ------------------------------
-    # Lógica de login
-    # ------------------------------
     def login_usuario(self):
         self.label_error.config(text="")
         usuario = self.entry_usuario.get().strip()
@@ -89,9 +79,6 @@ class Login:
         MenuPrincipal(root_menu, rol, usuario_db.usuario)
         root_menu.mainloop()
 
-    # ------------------------------
-    # Abrir ventana de registro
-    # ------------------------------
     def abrir_registro(self):
         from interfaz.registro import Registro
         self.root.withdraw()

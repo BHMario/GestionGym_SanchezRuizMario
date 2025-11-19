@@ -35,7 +35,6 @@ class VentanaRutinas:
         tk.Button(self.root, text="Volver al Menú", bg="#333333", fg="white",
                   font=("Segoe UI", 12, "bold"), command=self.root.destroy).place(relx=0.95, rely=0.05, anchor="ne")
 
-        # Canvas + Scroll
         self.canvas = tk.Canvas(self.root, bg="#FFFFFF", highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
@@ -48,7 +47,6 @@ class VentanaRutinas:
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_limited)
 
-        # Rutinas de ejemplo
         self.rutinas = [
             {
                 "nombre": "Rutina Full Body",
@@ -161,7 +159,6 @@ class VentanaRutinas:
         tk.Label(ventana_detalle, text=rutina["descripcion"], bg="#FFFFFF", fg="#444444",
                  font=("Segoe UI", 12), wraplength=450, justify="left").pack(pady=10)
 
-        # Ejercicios
         for ex in rutina.get("ejercicios", []):
             texto = f"{ex['nombre']} - Series: {ex['series']}, Reps: {ex['repeticiones']}, Descanso: {ex['descanso']}"
             tk.Label(ventana_detalle, text=texto, bg="#FFFFFF", fg="#555555",

@@ -17,7 +17,6 @@ class MenuPrincipal:
         self.rol = rol
         self.nombre_usuario = nombre_usuario
 
-        # Configuración ventana
         self.root.title("Gym For The Moment - Menú Principal")
         self.root.geometry("1000x700")
         self.root.configure(bg="#FFFFFF")
@@ -26,15 +25,14 @@ class MenuPrincipal:
         self._construir_interfaz()
 
     def _construir_interfaz(self):
-        # Título app
+        # Título
         tk.Label(self.root, text="GYM FOR THE MOMENT", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 24, "bold")).pack(pady=(30, 5))
 
-        # Subtítulo de bienvenida
+        # Subtítulo
         tk.Label(self.root, text=f"Bienvenido, {self.nombre_usuario}!", bg="#FFFFFF",
                  fg="#444444", font=("Segoe UI", 16, "bold")).pack(pady=(0, 20))
 
-        # Botón cerrar sesión arriba a la derecha
         cerrar_sesion_btn = tk.Button(self.root, text="Cerrar Sesión", bg="#CC3333", fg="white",
                                       font=("Segoe UI", 12, "bold"), command=self._cerrar_sesion)
         cerrar_sesion_btn.place(relx=0.9, rely=0.05, anchor="ne")

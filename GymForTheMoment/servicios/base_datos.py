@@ -4,18 +4,13 @@ import os
 RUTA_BD = "datos/gimnasio.db"
 
 def obtener_conexion():
-    """
-    Devuelve una conexión activa a la base de datos SQLite.
-    Crea la carpeta 'datos/' si no existe.
-    """
+    # Conexion a la base de datos SQLite.
+    # Crea la carpeta 'datos/' si no existe.
     if not os.path.exists("datos"):
         os.makedirs("datos")
     return sqlite3.connect(RUTA_BD)
 
 def inicializar_bd():
-    """
-    Crea las tablas necesarias si no existen.
-    """
     conexion = obtener_conexion()
     cursor = conexion.cursor()
 

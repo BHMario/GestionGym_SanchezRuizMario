@@ -54,7 +54,6 @@ class ServicioClases:
         return [Clase(f[0], f[1], bool(f[3]), f[2], f[4]) for f in filas]
 
     def obtener_clase_por_nombre(self, nombre):
-        """Devuelve un objeto Clase por su nombre, o None si no existe"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT id, nombre, descripcion, ocupado, tipo FROM clases WHERE nombre=?", (nombre,))
@@ -65,22 +64,16 @@ class ServicioClases:
         return None
 
     def marcar_ocupado(self, nombre_clase, minutos=30):
-        """
-        Marca una clase como ocupada y la libera automáticamente después de X minutos.
-        Actualiza la base de datos.
-        """
+        # Marcar la clase como ocupada y lanzar un hilo que la libera tras 30 minutos.
         def ocupacion_temporal():
-            # Marcar como ocupado
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute("UPDATE clases SET ocupado=1 WHERE nombre=?", (nombre_clase,))
             conn.commit()
             conn.close()
 
-            # Esperar el tiempo definido
             time.sleep(minutos * 60)
 
-            # Liberar la clase
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute("UPDATE clases SET ocupado=0 WHERE nombre=?", (nombre_clase,))

@@ -33,7 +33,7 @@ class ServicioClientes:
             conn.commit()
         except sqlite3.IntegrityError:
             conn.close()
-            return False  # Usuario ya existe
+            return False
         conn.close()
         return True
 

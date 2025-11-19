@@ -49,18 +49,14 @@ class ServicioReservas:
         conn.close()
 
     def aceptar_reserva(self, reserva):
-        """
-        Marca la reserva como aceptada y, si el 'aparato' corresponde a un aparato físico
-        o a una clase, marca ese recurso como ocupado durante 30 minutos.
-        """
+        # Marcar la reserva como aceptada y, si el 'aparato' corresponde a un aparato físico
+        # o a una clase, marca ese recurso como ocupado durante 30 minutos.
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("UPDATE reservas SET estado='aceptada' WHERE id=?", (reserva.id,))
         conn.commit()
         conn.close()
 
-        # Intentar marcar el recurso como ocupado: primero intentamos con ServicioAparatos,
-        # si no existe, intentamos con ServicioClases.
         try:
             # import aquí para evitar ciclos al importar interfaz <-> servicios
             from servicios.servicio_aparatos import ServicioAparatos
@@ -70,7 +66,6 @@ class ServicioReservas:
                 s_aparatos.marcar_ocupado_por_nombre(reserva.aparato, minutos=30)
                 return
         except Exception:
-            # Si falla la importación o no encontrado, seguimos a clases
             pass
 
         try:
@@ -78,7 +73,6 @@ class ServicioReservas:
             s_clases = ServicioClases(self.db_path)
             clase_obj = s_clases.obtener_clase_por_nombre(reserva.aparato)
             if clase_obj:
-                # ServicioClases ya implementa marcar_ocupado(nombre, minutos)
                 s_clases.marcar_ocupado(reserva.aparato, minutos=30)
                 return
         except Exception:

@@ -5,16 +5,12 @@ from utilidades.validadores import validar_email
 
 class Registro:
     def __init__(self, root, login_root):
-        """
-        root: ventana de registro
-        login_root: ventana login que la llamó, para mostrarla de nuevo después
-        """
         self.root = root
         self.login_root = login_root
         self.root.title("Registro de Cliente")
-        self.root.geometry("1100x750")  # Ventana más grande
+        self.root.geometry("1100x750")
         self.root.resizable(False, False)
-        self.root.configure(bg="#FFFFFF")  # Fondo blanco
+        self.root.configure(bg="#FFFFFF")
 
         self.servicio_clientes = ServicioClientes()
 
@@ -36,46 +32,37 @@ class Registro:
                   foreground=[("active", "white")])
 
     def _construir_interfaz(self):
-        # Sombra de la tarjeta
         sombra = tk.Frame(self.root, bg="#CCCCCC")
         sombra.place(relx=0.5, rely=0.5, anchor="center", width=500, height=600)
 
-        # Tarjeta central
         self.marco = tk.Frame(self.root, bg="#F5F5F5", bd=0)
         self.marco.place(relx=0.5, rely=0.5, anchor="center", width=490, height=590)
 
-        # Título elegante
         tk.Label(self.marco, text="REGISTRO DE CLIENTE", bg="#F5F5F5", fg="#222222",
                  font=("Segoe UI", 24, "bold")).pack(pady=(40, 30))
 
-        # Usuario
         ttk.Label(self.marco, text="Usuario:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(0, 5))
         self.entry_usuario = ttk.Entry(self.marco)
         self.entry_usuario.pack(fill="x", padx=50, pady=(0, 5))
 
-        # Email
         ttk.Label(self.marco, text="Email:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(10, 5))
         self.entry_email = ttk.Entry(self.marco)
         self.entry_email.pack(fill="x", padx=50, pady=(0, 5))
 
-        # Contraseña
         ttk.Label(self.marco, text="Contraseña:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(10, 5))
         self.entry_contrasena = ttk.Entry(self.marco, show="*")
         self.entry_contrasena.pack(fill="x", padx=50, pady=(0, 15))
 
-        # Label de error (vacío inicialmente)
         self.label_error = tk.Label(self.marco, text="", fg="red", bg="#F5F5F5", font=("Segoe UI", 10))
         self.label_error.pack(pady=(5, 10))
 
-        # Botones
         ttk.Button(self.marco, text="Registrarse", command=self.registrar_usuario).pack(fill="x", padx=50, pady=(0, 10))
         ttk.Button(self.marco, text="Cancelar", command=self.cancelar_registro).pack(fill="x", padx=50)
 
-        # Pie de la tarjeta
         tk.Label(self.marco, text="© 2025 Gym For The Moment", bg="#F5F5F5", fg="#555555", font=("Segoe UI", 10)).pack(side="bottom", pady=15)
 
     def registrar_usuario(self):
-        self.label_error.config(text="")  # Limpiar mensaje previo
+        self.label_error.config(text="")
         usuario = self.entry_usuario.get().strip()
         email = self.entry_email.get().strip()
         contrasena = self.entry_contrasena.get().strip()

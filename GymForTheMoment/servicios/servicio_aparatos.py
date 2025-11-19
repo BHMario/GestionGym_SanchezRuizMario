@@ -66,7 +66,6 @@ class ServicioAparatos:
         return [Aparato(f[0], f[1], bool(f[3]), f[2], f[4]) for f in filas]
 
     def obtener_aparato_por_nombre(self, nombre):
-        """Devuelve un objeto Aparato por su nombre (o None)."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT id, nombre, descripcion, ocupado, musculo FROM aparatos WHERE nombre=?", (nombre,))
@@ -77,9 +76,7 @@ class ServicioAparatos:
         return None
 
     def marcar_ocupado_por_nombre(self, nombre, minutos=30):
-        """
-        Marca el aparato con 'nombre' como ocupado y lanza un hilo que lo libera tras `minutos`.
-        """
+        # Marcar el aparato como ocupado y lanzar un hilo que lo libera tras 30 minutos.
         def ocupacion_temporal():
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -87,7 +84,6 @@ class ServicioAparatos:
             conn.commit()
             conn.close()
 
-            # Dormimos `minutos` minutos y luego liberamos la máquina
             time.sleep(minutos * 60)
 
             conn = sqlite3.connect(self.db_path)
@@ -96,5 +92,4 @@ class ServicioAparatos:
             conn.commit()
             conn.close()
 
-        # Iniciar hilo daemon para no bloquear
         threading.Thread(target=ocupacion_temporal, daemon=True).start()

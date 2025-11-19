@@ -30,7 +30,7 @@ class VentanaGestionUsuarios:
         if not seleccionado:
             messagebox.showwarning("Aviso", "Debe seleccionar un usuario")
             return
-        # Ejemplo: alternar estado de pago
+
         indice = seleccionado[0]
         clientes = self.servicio_clientes.listar_clientes()
         cliente = clientes[indice]

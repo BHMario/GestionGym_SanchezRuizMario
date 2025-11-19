@@ -49,12 +49,10 @@ class VentanaPagos:
         self.frame_campos.pack(pady=20)
         self._actualizar_campos_pago()
 
-        # Botón pagar
         boton_pagar = tk.Button(self.root, text="Pagar Ahora", bg="#333333", fg="white",
                                 font=("Segoe UI", 14, "bold"), command=self.simular_pago)
         boton_pagar.pack(pady=10, ipadx=20, ipady=8)
 
-        # Label para mensajes (error o pago completado)
         self.label_mensaje = tk.Label(self.root, text="", bg="#FFFFFF", fg="red", font=("Segoe UI", 12, "bold"))
         self.label_mensaje.pack(pady=10)
 
