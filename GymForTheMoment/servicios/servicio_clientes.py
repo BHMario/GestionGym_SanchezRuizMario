@@ -60,3 +60,10 @@ class ServicioClientes:
             self.agregar_cliente("Cliente1", "cliente@gym.com", "cliente123", pagado=True, rol="cliente")
         if not self.obtener_cliente_por_usuario("Admin"):
             self.agregar_cliente("Admin", "admin@gym.com", "admin123", pagado=True, rol="administrador")
+
+    def actualizar_estado_pago(self, usuario, pagado):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE clientes SET pagado=? WHERE usuario=?", (int(pagado), usuario))
+        conn.commit()
+        conn.close()
