@@ -62,8 +62,13 @@ class ServicioClientes:
             self.agregar_cliente("Admin", "admin@gym.com", "admin123", pagado=True, rol="administrador")
 
     def actualizar_estado_pago(self, usuario, pagado):
+        # Permitir actualizar manualmente el estado de pago de un usuario.
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("UPDATE clientes SET pagado=? WHERE usuario=?", (int(pagado), usuario))
         conn.commit()
         conn.close()
+
+    def marcar_pagado(self, usuario):
+        # Marcar un usuario como pagado.
+        self.actualizar_estado_pago(usuario, True)

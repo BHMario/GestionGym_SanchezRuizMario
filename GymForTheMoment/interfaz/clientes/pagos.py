@@ -1,9 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
+from servicios.servicio_clientes import ServicioClientes
 
 class VentanaPagos:
-    def __init__(self, root):
+    def __init__(self, root, cliente_actual="usuario1"):
         self.root = root
+        self.cliente_actual = cliente_actual
+        self.servicio_clientes = ServicioClientes()
+
         self.root.title("Pasarela de Pagos - Gym For The Moment")
         self.root.geometry("800x700")
         self.root.configure(bg="#FFFFFF")
@@ -99,8 +103,11 @@ class VentanaPagos:
                 return
 
         metodo = self.metodo_pago.get()
+
+        self.servicio_clientes.marcar_pagado(self.cliente_actual)
+
         self.label_mensaje.config(
-            text=f"Pago mediante {metodo} completado correctamente. ¡Gracias por tu compra!",
+            text=f"Pago mediante {metodo} completado correctamente. ¡Gracias, {self.cliente_actual}!",
             fg="green"
         )
 
