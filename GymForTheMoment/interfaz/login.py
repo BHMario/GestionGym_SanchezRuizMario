@@ -86,7 +86,7 @@ class Login:
 
         self.root.destroy()
         root_menu = tk.Tk()
-        MenuPrincipal(root_menu, rol, usuario_db.usuario)  # <-- ahora pasamos el nombre para la bienvenida
+        MenuPrincipal(root_menu, rol, usuario_db.usuario)
         root_menu.mainloop()
 
     # ------------------------------
