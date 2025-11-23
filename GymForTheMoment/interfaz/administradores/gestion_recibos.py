@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_recibos import ServicioRecibos
+from servicios.servicio_clientes import ServicioClientes  # ← IMPORTANTE
+
 
 class VentanaGestionRecibos:
     def __init__(self, root):
@@ -10,6 +12,7 @@ class VentanaGestionRecibos:
         self.root.configure(bg="#FFFFFF")
 
         self.servicio_recibos = ServicioRecibos()
+        self.servicio_clientes = ServicioClientes()  # ← NUEVO: para consultar morosos reales
 
         self._configurar_estilos()
         self._construir_interfaz()
@@ -24,13 +27,12 @@ class VentanaGestionRecibos:
         tk.Label(self.root, text="Gestión de Recibos", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 24, "bold")).pack(pady=20)
 
-        # Botones principales
         tk.Button(self.root, text="Generar Recibos Mensuales", bg="#64B5F6", fg="white",
                   font=("Segoe UI", 12, "bold"), command=self.generar_recibos).pack(pady=10)
+
         tk.Button(self.root, text="Ver Clientes Morosos", bg="#F06292", fg="white",
                   font=("Segoe UI", 12, "bold"), command=self.ver_morosos).pack(pady=5)
 
-        # Frame scrollable para mostrar clientes morosos
         self.canvas = tk.Canvas(self.root, bg="#FFFFFF", highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
@@ -44,18 +46,20 @@ class VentanaGestionRecibos:
 
     def generar_recibos(self):
         self.servicio_recibos.generar_recibos_mes()
-        # Mostrar confirmación en la misma ventana
+
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
+
         tk.Label(self.scrollable_frame, text="Recibos generados correctamente ✅",
                  bg="#FFFFFF", fg="green", font=("Segoe UI", 12, "bold")).pack(pady=10)
 
     def ver_morosos(self):
-        # Limpiar frame anterior
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
 
-        morosos = self.servicio_recibos.listar_morosos()
+        # ⬇️ CAMBIO: Ahora se consultan los morosos reales desde la tabla CLIENTES
+        morosos = [c for c in self.servicio_clientes.listar_clientes() if not c.pagado]
+
         if not morosos:
             tk.Label(self.scrollable_frame, text="No hay clientes morosos", bg="#FFFFFF",
                      fg="#444444", font=("Segoe UI", 12, "bold")).pack(pady=10)
@@ -64,7 +68,7 @@ class VentanaGestionRecibos:
         tk.Label(self.scrollable_frame, text="Clientes Morosos", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 16, "bold")).pack(pady=10)
 
-        color_base = "#F06292"  # color de tarjeta moroso
+        color_base = "#F06292"
         for cliente in morosos:
             tarjeta = tk.Frame(self.scrollable_frame, bg=color_base, width=600, height=50, bd=0)
             tarjeta.pack(pady=5, padx=10, fill="x")

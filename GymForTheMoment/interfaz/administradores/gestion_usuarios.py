@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_clientes import ServicioClientes
+from modelos.cliente import Cliente
 
 def aclarar_color(hex_color, factor=0.2):
     hex_color = hex_color.lstrip("#")
@@ -11,15 +12,18 @@ def aclarar_color(hex_color, factor=0.2):
     return f"#{r:02X}{g:02X}{b:02X}"
 
 class VentanaGestionUsuarios:
-    def __init__(self, root):
+    def __init__(self, root, refresco_periodico_ms=2000):
         self.root = root
         self.root.title("Gestión de Usuarios - Gym For The Moment")
-        self.root.geometry("800x600")
+        self.root.geometry("900x700")
         self.root.configure(bg="#FFFFFF")
         self.servicio_clientes = ServicioClientes()
 
+        self.refresco_periodico_ms = refresco_periodico_ms
+
         self._configurar_estilos()
         self._construir_interfaz()
+        self._programar_refresco()
 
     def _configurar_estilos(self):
         style = ttk.Style()
@@ -44,6 +48,9 @@ class VentanaGestionUsuarios:
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_limited)
 
+        tk.Button(self.root, text="Refrescar Usuarios", bg="#64B5F6", fg="white",
+                  font=("Segoe UI", 12, "bold"), command=self._cargar_usuarios_tarjetas).pack(pady=8)
+
         self._cargar_usuarios_tarjetas()
 
     def _on_mousewheel_limited(self, event):
@@ -54,44 +61,48 @@ class VentanaGestionUsuarios:
         self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def _cargar_usuarios_tarjetas(self):
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
+        for w in self.scrollable_frame.winfo_children():
+            w.destroy()
 
-        clientes = self.servicio_clientes.listar_clientes()
+        clientes_dict = self.servicio_clientes.listar_clientes_bd()
+
+        clientes = [Cliente(id=None, usuario=c["usuario"], email=c["email"],
+                            contrasena="", pagado=bool(c["pagado"]), rol=c["rol"]) for c in clientes_dict]
+
+        if not clientes:
+            tk.Label(self.scrollable_frame, text="No hay clientes registrados", bg="#FFFFFF",
+                     fg="#444444", font=("Segoe UI", 12)).pack(pady=20)
+            return
+
         filas = (len(clientes) + 2) // 3
         index = 0
 
         for fila in range(filas):
             row_frame = tk.Frame(self.scrollable_frame, bg="#FFFFFF")
             row_frame.pack(expand=True, fill="both", pady=10)
-
             for col in range(3):
                 if index >= len(clientes):
                     break
-
                 cliente = clientes[index]
-                tarjeta = ttk.Frame(row_frame, style="Tarjeta.TFrame", width=220, height=150)
+                tarjeta = ttk.Frame(row_frame, style="Tarjeta.TFrame", width=260, height=140)
                 tarjeta.pack(side="left", padx=15, expand=True, fill="both")
                 tarjeta.pack_propagate(False)
 
                 tk.Label(tarjeta, text=f"{cliente.usuario}", bg="#F5F5F5", fg="#222222",
                          font=("Segoe UI", 14, "bold")).pack(pady=(10, 5))
                 tk.Label(tarjeta, text=f"{cliente.email}", bg="#F5F5F5", fg="#444444",
-                         font=("Segoe UI", 12)).pack(pady=(0, 10))
+                         font=("Segoe UI", 12)).pack(pady=(0, 6))
 
                 estado_color = "#4CAF50" if cliente.pagado else "#F44336"
                 estado_texto = "Pagado" if cliente.pagado else "Moroso"
-                estado_label = tk.Label(tarjeta, text=f"Estado: {estado_texto}", bg="#F5F5F5",
-                                        fg=estado_color, font=("Segoe UI", 12, "bold"))
-                estado_label.pack(pady=(0, 10))
-
-                tk.Button(tarjeta, text="Actualizar Pago", bg="#333333", fg="white",
-                          font=("Segoe UI", 12, "bold"),
-                          command=lambda c=cliente: self._actualizar_pago(c)).pack(pady=5, ipadx=10, ipady=5)
+                tk.Label(tarjeta, text=f"Estado: {estado_texto}", bg="#F5F5F5",
+                         fg=estado_color, font=("Segoe UI", 12, "bold")).pack(pady=(0, 8))
 
                 index += 1
 
-    def _actualizar_pago(self, cliente):
-        cliente.pagado = not cliente.pagado
-        self.servicio_clientes.actualizar_estado_pago(cliente.usuario, cliente.pagado)
-        self._cargar_usuarios_tarjetas()
+    def _programar_refresco(self):
+        try:
+            self._cargar_usuarios_tarjetas()
+        except Exception:
+            pass
+        self.root.after(self.refresco_periodico_ms, self._programar_refresco)

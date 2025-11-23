@@ -22,14 +22,14 @@ class MenuPrincipal:
         self.root.configure(bg="#FFFFFF")
         self.root.resizable(False, False)
 
+        self.ventana_gestion_usuarios = None  # para callback
+
         self._construir_interfaz()
 
     def _construir_interfaz(self):
-        # Título
         tk.Label(self.root, text="GYM FOR THE MOMENT", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 24, "bold")).pack(pady=(30, 5))
 
-        # Subtítulo
         tk.Label(self.root, text=f"Bienvenido, {self.nombre_usuario}!", bg="#FFFFFF",
                  fg="#444444", font=("Segoe UI", 16, "bold")).pack(pady=(0, 20))
 
@@ -39,7 +39,6 @@ class MenuPrincipal:
         cerrar_sesion_btn.bind("<Enter>", lambda e: cerrar_sesion_btn.config(bg="#AA0000"))
         cerrar_sesion_btn.bind("<Leave>", lambda e: cerrar_sesion_btn.config(bg="#CC3333"))
 
-        # Contenedor de tarjetas
         contenedor = tk.Frame(self.root, bg="#FFFFFF")
         contenedor.pack(expand=True, fill="both", pady=20, padx=50)
 
@@ -60,7 +59,6 @@ class MenuPrincipal:
 
         self._crear_tarjetas(contenedor, opciones)
 
-        # Pie de página
         tk.Label(self.root, text="© 2025 Gym For The Moment", bg="#FFFFFF",
                  fg="#555555", font=("Segoe UI", 10)).pack(side="bottom", pady=10)
 
@@ -81,7 +79,7 @@ class MenuPrincipal:
                 btn = tk.Button(tarjeta, text=texto, bg=color, fg="white",
                                 font=("Segoe UI", 14, "bold"), bd=0, command=comando)
                 btn.pack(expand=True, fill="both")
-                # Hover
+
                 btn.bind("<Enter>", lambda e, b=btn: b.config(bg="#555555"))
                 btn.bind("<Leave>", lambda e, b=btn, c=color: b.config(bg=c))
                 index += 1
@@ -108,11 +106,11 @@ class MenuPrincipal:
 
     def abrir_pagos(self):
         ventana = tk.Toplevel(self.root)
-        VentanaPagos(ventana)
+        VentanaPagos(ventana, cliente_actual=self.nombre_usuario, callback_refrescar=self._refrescar_gestion_usuarios)
 
     def abrir_gestion_usuarios(self):
-        ventana = tk.Toplevel(self.root)
-        VentanaGestionUsuarios(ventana)
+        self.ventana_gestion_usuarios = tk.Toplevel(self.root)
+        VentanaGestionUsuarios(self.ventana_gestion_usuarios)
 
     def abrir_gestion_reservas(self):
         ventana = tk.Toplevel(self.root)
@@ -125,3 +123,7 @@ class MenuPrincipal:
     def abrir_notificaciones(self):
         ventana = tk.Toplevel(self.root)
         VentanaNotificaciones(ventana)
+
+    def _refrescar_gestion_usuarios(self):
+        if self.ventana_gestion_usuarios and self.ventana_gestion_usuarios.winfo_exists():
+            self.ventana_gestion_usuarios._cargar_usuarios_tarjetas()

@@ -12,7 +12,7 @@ class Login:
         self.root.configure(bg="#FFFFFF")
 
         self.servicio_clientes = ServicioClientes()
-        self.servicio_clientes.crear_usuarios_iniciales()  # asegurar que los usuarios existan
+        self.servicio_clientes.crear_usuarios_iniciales()
 
         self._configurar_estilos()
         self._construir_interfaz()

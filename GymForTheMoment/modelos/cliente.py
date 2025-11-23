@@ -4,8 +4,8 @@ class Cliente:
         self.usuario = usuario
         self.email = email
         self.contrasena = contrasena
-        self.pagado = pagado
+        self.pagado = bool(pagado)
         self.rol = rol
 
     def __repr__(self):
-        return f"<Cliente {self.usuario} ({self.rol})>"
+        return f"<Cliente {self.usuario} ({self.rol}) - Pagado: {self.pagado}>"
