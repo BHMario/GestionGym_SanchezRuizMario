@@ -33,8 +33,16 @@ class VentanaGestionUsuarios:
         style.configure("Tarjeta.TFrame", background="#F5F5F5", relief="ridge", borderwidth=2)
 
     def _construir_interfaz(self):
-        tk.Label(self.root, text="Listado de Clientes", bg="#FFFFFF", fg="#222222",
-                 font=("Segoe UI", 24, "bold")).pack(pady=20)
+        # Header con título y botón de refrescar
+        header_frame = tk.Frame(self.root, bg="#FFFFFF")
+        header_frame.pack(pady=15, padx=20, fill="x")
+
+        tk.Label(header_frame, text="Listado de Clientes", bg="#FFFFFF", fg="#222222",
+                 font=("Segoe UI", 24, "bold")).pack(side="left", expand=True)
+
+        tk.Button(header_frame, text="Refrescar Usuarios", bg="#64B5F6", fg="white",
+                  font=("Segoe UI", 11, "bold"), command=self._cargar_usuarios_tarjetas,
+                  relief="flat", padx=15, pady=8).pack(side="right")
 
         self.canvas = tk.Canvas(self.root, bg="#FFFFFF", highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
@@ -48,8 +56,6 @@ class VentanaGestionUsuarios:
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_limited)
 
-        tk.Button(self.root, text="Refrescar Usuarios", bg="#64B5F6", fg="white",
-                  font=("Segoe UI", 12, "bold"), command=self._cargar_usuarios_tarjetas).pack(pady=8)
 
         self._cargar_usuarios_tarjetas()
 

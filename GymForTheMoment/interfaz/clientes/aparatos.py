@@ -93,17 +93,17 @@ class VentanaAparatos:
                         color_base = color
                         break
 
-                tarjeta = tk.Frame(row_frame, bg=color_base, width=200, height=300, bd=0)
-                tarjeta.pack(side="left", padx=20, expand=True, fill="both")
+                tarjeta = tk.Frame(row_frame, bg=color_base, width=220, height=160, bd=0, relief="solid", highlightthickness=1, highlightbackground="#CCCCCC")
+                tarjeta.pack(side="left", padx=15, pady=10, expand=True, fill="both")
                 tarjeta.pack_propagate(False)
 
                 nombre_label = tk.Label(tarjeta, text=aparato.nombre, bg=color_base, fg="white",
-                                        font=("Segoe UI", 14, "bold"), wraplength=180, justify="center")
-                nombre_label.pack(expand=True, fill="both")
+                                        font=("Segoe UI", 13, "bold"), wraplength=200, justify="center")
+                nombre_label.pack(expand=True, fill="both", padx=10, pady=(15, 10))
 
                 tk.Button(tarjeta, text="Ver Detalle / Reservar", bg="#FFFFFF", fg="#222222",
-                          font=("Segoe UI", 12, "bold"), bd=0,
-                          command=lambda a=aparato: self._detalle_aparato(a)).pack(fill="x", padx=10, pady=10)
+                          font=("Segoe UI", 10, "bold"), bd=0, relief="flat",
+                          command=lambda a=aparato: self._detalle_aparato(a)).pack(fill="x", padx=8, pady=(5, 10))
 
                 tarjeta.bind("<Enter>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
                              (t.configure(bg=aclarar_color(c, 0.3)), l.configure(bg=aclarar_color(c, 0.3))))
