@@ -63,7 +63,7 @@ class ServicioReservas:
             s_aparatos = ServicioAparatos(self.db_path)
             aparato_obj = s_aparatos.obtener_aparato_por_nombre(reserva.aparato)
             if aparato_obj:
-                s_aparatos.marcar_ocupado_por_nombre(reserva.aparato, minutos=30)
+                s_aparatos.marcar_ocupado_por_nombre(reserva.aparato, minutos=30, cliente=reserva.cliente)
                 return
         except Exception:
             pass
@@ -73,7 +73,7 @@ class ServicioReservas:
             s_clases = ServicioClases(self.db_path)
             clase_obj = s_clases.obtener_clase_por_nombre(reserva.aparato)
             if clase_obj:
-                s_clases.marcar_ocupado(reserva.aparato, minutos=30)
+                s_clases.marcar_ocupado(reserva.aparato, minutos=30, cliente=reserva.cliente)
                 return
         except Exception:
             pass

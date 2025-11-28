@@ -1,6 +1,7 @@
 import sqlite3
 import threading
 import time
+import datetime
 from modelos.aparato import Aparato
 
 class ServicioAparatos:
@@ -18,9 +19,20 @@ class ServicioAparatos:
                 nombre TEXT,
                 descripcion TEXT,
                 ocupado INTEGER,
-                musculo TEXT
+                musculo TEXT,
+                ocupante TEXT,
+                hora_fin_ocupacion TEXT
             )
         """)
+        conn.commit()
+
+        # Migración: agregar columnas si no existen
+        cursor.execute("PRAGMA table_info(aparatos)")
+        columnas = [col[1] for col in cursor.fetchall()]
+        if "ocupante" not in columnas:
+            cursor.execute("ALTER TABLE aparatos ADD COLUMN ocupante TEXT")
+        if "hora_fin_ocupacion" not in columnas:
+            cursor.execute("ALTER TABLE aparatos ADD COLUMN hora_fin_ocupacion TEXT")
         conn.commit()
         conn.close()
 
@@ -75,12 +87,16 @@ class ServicioAparatos:
             return Aparato(fila[0], fila[1], bool(fila[3]), fila[2], fila[4])
         return None
 
-    def marcar_ocupado_por_nombre(self, nombre, minutos=30):
+    def marcar_ocupado_por_nombre(self, nombre, minutos=30, cliente=""):
         # Marcar el aparato como ocupado y lanzar un hilo que lo libera tras 30 minutos.
         def ocupacion_temporal():
+            hora_inicio = datetime.datetime.now()
+            hora_fin = hora_inicio + datetime.timedelta(minutes=minutos)
+
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("UPDATE aparatos SET ocupado=1 WHERE nombre=?", (nombre,))
+            cursor.execute("UPDATE aparatos SET ocupado=1, ocupante=?, hora_fin_ocupacion=? WHERE nombre=?",
+                          (cliente, hora_fin.strftime("%Y-%m-%d %H:%M:%S"), nombre))
             conn.commit()
             conn.close()
 
@@ -88,8 +104,16 @@ class ServicioAparatos:
 
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("UPDATE aparatos SET ocupado=0 WHERE nombre=?", (nombre,))
+            cursor.execute("UPDATE aparatos SET ocupado=0, ocupante=NULL, hora_fin_ocupacion=NULL WHERE nombre=?", (nombre,))
             conn.commit()
             conn.close()
 
         threading.Thread(target=ocupacion_temporal, daemon=True).start()
+
+    def listar_aparatos_ocupados(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, descripcion, ocupado, musculo, ocupante, hora_fin_ocupacion FROM aparatos WHERE ocupado=1")
+        filas = cursor.fetchall()
+        conn.close()
+        return [{"id": f[0], "nombre": f[1], "ocupante": f[5], "hora_fin": f[6]} for f in filas]

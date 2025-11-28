@@ -159,10 +159,10 @@ class VentanaNotificaciones:
 
             if nombre in aparatos:
                 # Marcar aparato ocupado 30 min
-                self.servicio_aparatos.marcar_ocupado(nombre, minutos=30)
+                self.servicio_aparatos.marcar_ocupado_por_nombre(nombre, minutos=30, cliente=solicitud.cliente)
             elif nombre in clases:
                 # Marcar clase ocupada 30 min
-                self.servicio_clases.marcar_ocupado(nombre, minutos=30)
+                self.servicio_clases.marcar_ocupado(nombre, minutos=30, cliente=solicitud.cliente)
 
             self.cargar_notificaciones()
 

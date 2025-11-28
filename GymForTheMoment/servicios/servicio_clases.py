@@ -2,6 +2,7 @@ import sqlite3
 from modelos.clase import Clase
 import threading
 import time
+import datetime
 
 class ServicioClases:
     def __init__(self, db_path="gimnasio.db"):
@@ -18,9 +19,20 @@ class ServicioClases:
                 nombre TEXT,
                 descripcion TEXT,
                 ocupado INTEGER,
-                tipo TEXT
+                tipo TEXT,
+                ocupante TEXT,
+                hora_fin_ocupacion TEXT
             )
         """)
+        conn.commit()
+
+        # Migración: agregar columnas si no existen
+        cursor.execute("PRAGMA table_info(clases)")
+        columnas = [col[1] for col in cursor.fetchall()]
+        if "ocupante" not in columnas:
+            cursor.execute("ALTER TABLE clases ADD COLUMN ocupante TEXT")
+        if "hora_fin_ocupacion" not in columnas:
+            cursor.execute("ALTER TABLE clases ADD COLUMN hora_fin_ocupacion TEXT")
         conn.commit()
         conn.close()
 
@@ -63,12 +75,16 @@ class ServicioClases:
             return Clase(fila[0], fila[1], bool(fila[3]), fila[2], fila[4])
         return None
 
-    def marcar_ocupado(self, nombre_clase, minutos=30):
+    def marcar_ocupado(self, nombre_clase, minutos=30, cliente=""):
         # Marcar la clase como ocupada y lanzar un hilo que la libera tras 30 minutos.
         def ocupacion_temporal():
+            hora_inicio = datetime.datetime.now()
+            hora_fin = hora_inicio + datetime.timedelta(minutes=minutos)
+
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("UPDATE clases SET ocupado=1 WHERE nombre=?", (nombre_clase,))
+            cursor.execute("UPDATE clases SET ocupado=1, ocupante=?, hora_fin_ocupacion=? WHERE nombre=?",
+                          (cliente, hora_fin.strftime("%Y-%m-%d %H:%M:%S"), nombre_clase))
             conn.commit()
             conn.close()
 
@@ -76,8 +92,16 @@ class ServicioClases:
 
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("UPDATE clases SET ocupado=0 WHERE nombre=?", (nombre_clase,))
+            cursor.execute("UPDATE clases SET ocupado=0, ocupante=NULL, hora_fin_ocupacion=NULL WHERE nombre=?", (nombre_clase,))
             conn.commit()
             conn.close()
 
         threading.Thread(target=ocupacion_temporal, daemon=True).start()
+
+    def listar_clases_ocupadas(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, descripcion, ocupado, tipo, ocupante, hora_fin_ocupacion FROM clases WHERE ocupado=1")
+        filas = cursor.fetchall()
+        conn.close()
+        return [{"id": f[0], "nombre": f[1], "ocupante": f[5], "hora_fin": f[6]} for f in filas]
