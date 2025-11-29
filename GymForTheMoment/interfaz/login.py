@@ -84,9 +84,3 @@ class Login:
         self.root.withdraw()
         registro_ventana = tk.Toplevel()
         Registro(registro_ventana, self.root)
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = Login(root)
-    root.mainloop()
