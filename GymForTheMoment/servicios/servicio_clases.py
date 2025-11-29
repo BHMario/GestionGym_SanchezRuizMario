@@ -104,4 +104,9 @@ class ServicioClases:
         cursor.execute("SELECT id, nombre, descripcion, ocupado, tipo, ocupante, hora_fin_ocupacion FROM clases WHERE ocupado=1")
         filas = cursor.fetchall()
         conn.close()
-        return [{"id": f[0], "nombre": f[1], "ocupante": f[5], "hora_fin": f[6]} for f in filas]
+        resultados = []
+        for f in filas:
+            ocupante = f[5] if f[5] is not None else "N/A"
+            hora_fin = f[6] if f[6] is not None else None
+            resultados.append({"id": f[0], "nombre": f[1], "ocupante": ocupante, "hora_fin": hora_fin})
+        return resultados

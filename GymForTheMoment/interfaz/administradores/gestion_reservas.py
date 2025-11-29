@@ -97,21 +97,24 @@ class VentanaGestionReservas:
         nombre_frame.pack(fill="x", pady=(0, 8))
 
         icono = "🏋️" if tipo == "aparato" else "📚"
-        tk.Label(nombre_frame, text=f"{icono} {item['nombre']}", bg="#F0F7FF", fg="#222222",
-                font=("Segoe UI", 13, "bold")).pack(side="left")
+        tk.Label(nombre_frame, text=f"{icono} {item.get('nombre','N/A')}", bg="#F0F7FF", fg="#222222",
+                font=("Segoe UI", 13, "bold"), wraplength=800, justify="left").pack(side="left")
 
         # Segunda fila: Ocupante y horario
         info_frame = tk.Frame(contenido, bg="#F0F7FF")
         info_frame.pack(fill="x", pady=(0, 5))
 
         tk.Label(info_frame, text=f"Ocupante: ", bg="#F0F7FF", fg="#666666",
-                font=("Segoe UI", 10, "bold")).pack(side="left")
-        tk.Label(info_frame, text=f"{item['ocupante']}", bg="#F0F7FF", fg="#2196F3",
-                font=("Segoe UI", 10, "bold")).pack(side="left", padx=(0, 20))
+                 font=("Segoe UI", 10, "bold")).pack(side="left")
+        tk.Label(info_frame, text=f"{item.get('ocupante','N/A')}", bg="#F0F7FF", fg="#2196F3",
+                font=("Segoe UI", 10, "bold"), wraplength=300, justify="left").pack(side="left", padx=(0, 20))
 
         # Calcular tiempo restante
         try:
-            hora_fin = datetime.datetime.strptime(item['hora_fin'], "%Y-%m-%d %H:%M:%S")
+            hora_fin_text = item.get('hora_fin')
+            if hora_fin_text in (None, '', 'None'):
+                raise ValueError("hora_fin no disponible")
+            hora_fin = datetime.datetime.strptime(hora_fin_text, "%Y-%m-%d %H:%M:%S")
             ahora = datetime.datetime.now()
             diferencia = hora_fin - ahora
 
@@ -121,7 +124,7 @@ class VentanaGestionReservas:
                 tiempo_restante = f"{minutos}m {segundos}s"
             else:
                 tiempo_restante = "Finalizando..."
-        except:
+        except Exception:
             tiempo_restante = "N/A"
 
         tk.Label(info_frame, text=f"Tiempo restante: ", bg="#F0F7FF", fg="#666666",
@@ -135,8 +138,9 @@ class VentanaGestionReservas:
 
         tk.Label(hora_frame, text=f"Hora de fin: ", bg="#F0F7FF", fg="#666666",
                 font=("Segoe UI", 10, "bold")).pack(side="left")
-        tk.Label(hora_frame, text=f"{item['hora_fin']}", bg="#F0F7FF", fg="#222222",
-                font=("Segoe UI", 10)).pack(side="left")
+        hora_fin_display = item.get('hora_fin') if item.get('hora_fin') not in (None, '', 'None') else 'N/A'
+        tk.Label(hora_frame, text=f"{hora_fin_display}", bg="#F0F7FF", fg="#222222",
+                font=("Segoe UI", 10), wraplength=400, justify="left").pack(side="left")
 
         # Efecto hover
         def on_enter(e):
