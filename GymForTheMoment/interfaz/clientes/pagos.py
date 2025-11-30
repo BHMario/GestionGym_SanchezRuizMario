@@ -4,14 +4,15 @@ from servicios.servicio_clientes import ServicioClientes
 from utilidades.ui import set_uniform_window
 
 class VentanaPagos:
-    def __init__(self, root, cliente_actual="usuario1", callback_refrescar=None):
+    def __init__(self, root, cliente_actual=None, callback_refrescar=None):
         self.root = root
-        self.cliente_actual = cliente_actual
+        self.cliente_actual = cliente_actual or "usuario1"
         self.servicio_clientes = ServicioClientes()
         self.callback_refrescar = callback_refrescar
 
         self.root.title("Pasarela de Pagos - Gym For The Moment")
-        set_uniform_window(self.root, width_frac=0.55, height_frac=0.75, min_width=800, min_height=650)
+        # Ampliar ligeramente la ventana para asegurar que los mensajes se ven completos
+        set_uniform_window(self.root, width_frac=0.6, height_frac=0.8, min_width=900, min_height=700)
         self.root.configure(bg="#FFFFFF")
 
         self.metodo_pago = tk.StringVar(value="Tarjeta")
@@ -32,17 +33,21 @@ class VentanaPagos:
         tk.Label(self.root, text="GYM FOR THE MOMENT", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 24, "bold")).pack(pady=20)
 
-        card = ttk.Frame(self.root, style="Card.TFrame")
-        card.pack(pady=10, padx=40, fill="both", expand=False)
-        card_inner = tk.Frame(card, bg="#F5F5F5")
-        card_inner.pack(padx=20, pady=20)
+        # Contenedor principal (expandible) y zona de mensajes fija al fondo
+        content_frame = tk.Frame(self.root, bg="#FFFFFF")
+        content_frame.pack(fill="both", expand=True, padx=20, pady=(10, 0))
 
-        tk.Label(card_inner, text="Monto a Pagar:", bg="#F5F5F5",
+        card = ttk.Frame(content_frame, style="Card.TFrame")
+        card.pack(pady=10, padx=40, fill="both", expand=False)
+        card_inner = tk.Frame(card, bg="#F0F7FF")
+        card_inner.pack(padx=20, pady=20, fill="both")
+
+        tk.Label(card_inner, text="Monto a Pagar:", bg="#F0F7FF",
                  font=("Segoe UI", 14, "bold")).pack(anchor="w")
-        tk.Label(card_inner, text="50 € / Mensualidad", bg="#F5F5F5",
+        tk.Label(card_inner, text="50 € / Mensualidad", bg="#F0F7FF",
                  font=("Segoe UI", 16)).pack(anchor="w", pady=(0, 10))
 
-        tk.Label(card_inner, text="Seleccione Método de Pago:", bg="#F5F5F5",
+        tk.Label(card_inner, text="Seleccione Método de Pago:", bg="#F0F7FF",
                  font=("Segoe UI", 14, "bold")).pack(anchor="w", pady=(10, 5))
 
         for metodo in ["Tarjeta", "PayPal", "Bizum"]:
@@ -50,15 +55,19 @@ class VentanaPagos:
                             style="Metodo.TRadiobutton",
                             command=self._actualizar_campos_pago).pack(anchor="w", padx=10)
 
-        self.frame_campos = tk.Frame(self.root, bg="#FFFFFF")
+        self.frame_campos = tk.Frame(content_frame, bg="#FFFFFF")
         self.frame_campos.pack(pady=20)
         self._actualizar_campos_pago()
 
-        tk.Button(self.root, text="Pagar Ahora", bg="#333333", fg="white",
-                  font=("Segoe UI", 14, "bold"), command=self.simular_pago).pack(pady=10, ipadx=20, ipady=8)
+        pagar_btn = tk.Button(content_frame, text="Pagar Ahora", bg="#2196F3", fg="white",
+                  font=("Segoe UI", 14, "bold"), command=self.simular_pago, bd=0, relief="flat")
+        pagar_btn.pack(pady=10, ipadx=20, ipady=8)
+        pagar_btn.bind("<Enter>", lambda e: pagar_btn.config(bg="#1976D2"))
+        pagar_btn.bind("<Leave>", lambda e: pagar_btn.config(bg="#2196F3"))
 
+        # Zona de mensajes fija en la parte inferior para que siempre sea visible
         self.label_mensaje = tk.Label(self.root, text="", bg="#FFFFFF", fg="red", font=("Segoe UI", 12, "bold"))
-        self.label_mensaje.pack(pady=10)
+        self.label_mensaje.pack(side="bottom", fill="x", pady=8)
 
     def _actualizar_campos_pago(self):
         for widget in self.frame_campos.winfo_children():

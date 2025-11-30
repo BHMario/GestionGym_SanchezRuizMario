@@ -97,12 +97,12 @@ class MenuPrincipal:
     def abrir_aparatos(self):
         ventana = tk.Toplevel(self.root)
         set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
-        VentanaAparatos(ventana)
+        VentanaAparatos(ventana, cliente_actual=self.nombre_usuario)
 
     def abrir_clases(self):
         ventana = tk.Toplevel(self.root)
         set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
-        VentanaClases(ventana)
+        VentanaClases(ventana, cliente_actual=self.nombre_usuario)
 
     def abrir_rutinas(self):
         ventana = tk.Toplevel(self.root)

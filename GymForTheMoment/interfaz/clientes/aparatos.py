@@ -14,12 +14,12 @@ def aclarar_color(hex_color, factor=0.2):
     return f"#{r:02X}{g:02X}{b:02X}"
 
 class VentanaAparatos:
-    def __init__(self, root, cliente_actual="usuario1"):
+    def __init__(self, root, cliente_actual=None):
         self.root = root
         self.root.title("Aparatos - Gym For The Moment")
         set_uniform_window(self.root, width_frac=0.7, height_frac=0.75, min_width=1000, min_height=700)
         self.root.configure(bg="#FFFFFF")
-        self.cliente_actual = cliente_actual
+        self.cliente_actual = cliente_actual or "usuario1"
 
         self.servicio_aparatos = ServicioAparatos()
         self.servicio_reservas = ServicioReservas()
