@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_clientes import ServicioClientes
+from utilidades.ui import set_uniform_window
 
 class VentanaPagos:
     def __init__(self, root, cliente_actual="usuario1", callback_refrescar=None):
@@ -10,7 +11,7 @@ class VentanaPagos:
         self.callback_refrescar = callback_refrescar
 
         self.root.title("Pasarela de Pagos - Gym For The Moment")
-        self.root.geometry("800x700")
+        set_uniform_window(self.root, width_frac=0.55, height_frac=0.75, min_width=800, min_height=650)
         self.root.configure(bg="#FFFFFF")
 
         self.metodo_pago = tk.StringVar(value="Tarjeta")

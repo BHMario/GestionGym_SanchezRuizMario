@@ -2,14 +2,15 @@ import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_clientes import ServicioClientes
 from utilidades.validadores import validar_email
+from utilidades.ui import set_uniform_window
 
 class Registro:
     def __init__(self, root, login_root):
         self.root = root
         self.login_root = login_root
         self.root.title("Registro de Cliente")
-        self.root.geometry("1100x750")
-        self.root.resizable(False, False)
+        # Ajustar tamaño uniforme y centrado
+        set_uniform_window(self.root, width_frac=0.6, height_frac=0.75, min_width=850, min_height=650)
         self.root.configure(bg="#FFFFFF")
 
         self.servicio_clientes = ServicioClientes()

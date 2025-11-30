@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from utilidades.ui import set_uniform_window
 
 def aclarar_color(hex_color, factor=0.2):
     hex_color = hex_color.lstrip("#")
@@ -13,7 +14,7 @@ class VentanaRutinas:
     def __init__(self, root):
         self.root = root
         self.root.title("Rutinas - Gym For The Moment")
-        self.root.geometry("1000x700")
+        set_uniform_window(self.root, width_frac=0.7, height_frac=0.75, min_width=1000, min_height=700)
         self.root.configure(bg="#FFFFFF")
 
         self._configurar_estilos()
@@ -147,7 +148,7 @@ class VentanaRutinas:
     def _detalle_rutina(self, rutina):
         ventana_detalle = tk.Toplevel(self.root)
         ventana_detalle.title(rutina["nombre"])
-        ventana_detalle.geometry("500x500")
+        set_uniform_window(ventana_detalle, width_frac=0.45, height_frac=0.6, min_width=520, min_height=480)
         ventana_detalle.configure(bg="#FFFFFF")
 
         tk.Button(ventana_detalle, text="← Volver", bg="#333333", fg="white",

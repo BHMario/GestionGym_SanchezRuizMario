@@ -37,12 +37,17 @@ class VentanaGestionUsuarios:
         header_frame = tk.Frame(self.root, bg="#FFFFFF")
         header_frame.pack(pady=15, padx=20, fill="x")
 
-        tk.Label(header_frame, text="Listado de Clientes", bg="#FFFFFF", fg="#222222",
-                 font=("Segoe UI", 24, "bold")).pack(side="left", expand=True)
+        # Usar grid para un header más controlado: título a la izquierda, botón a la derecha
+        header_frame.columnconfigure(0, weight=1)
+        header_frame.columnconfigure(1, weight=0)
 
-        tk.Button(header_frame, text="Refrescar Usuarios", bg="#64B5F6", fg="white",
+        tk.Label(header_frame, text="Listado de Clientes", bg="#FFFFFF", fg="#222222",
+                 font=("Segoe UI", 24, "bold")).grid(row=0, column=0, sticky="w")
+
+        # Botón de refrescar estéticamente alineado a la derecha
+        tk.Button(header_frame, text="🔄 Refrescar", bg="#64B5F6", fg="white",
                   font=("Segoe UI", 11, "bold"), command=self._cargar_usuarios_tarjetas,
-                  relief="flat", padx=15, pady=8).pack(side="right")
+                  relief="flat", padx=12, pady=8).grid(row=0, column=1, sticky="e")
 
         self.canvas = tk.Canvas(self.root, bg="#FFFFFF", highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
@@ -90,19 +95,35 @@ class VentanaGestionUsuarios:
                 if index >= len(clientes):
                     break
                 cliente = clientes[index]
-                tarjeta = ttk.Frame(row_frame, style="Tarjeta.TFrame", width=260, height=140)
-                tarjeta.pack(side="left", padx=15, expand=True, fill="both")
-                tarjeta.pack_propagate(False)
+                # Tarjeta visual con fondo y hover
+                tarjeta_frame = tk.Frame(row_frame, bg="#F0F7FF", width=280, height=140, relief="solid", bd=1)
+                tarjeta_frame.pack(side="left", padx=15, expand=True, fill="both")
+                tarjeta_frame.pack_propagate(False)
 
-                tk.Label(tarjeta, text=f"{cliente.usuario}", bg="#F5F5F5", fg="#222222",
-                         font=("Segoe UI", 14, "bold")).pack(pady=(10, 5))
-                tk.Label(tarjeta, text=f"{cliente.email}", bg="#F5F5F5", fg="#444444",
-                         font=("Segoe UI", 12)).pack(pady=(0, 6))
+                contenido = tk.Frame(tarjeta_frame, bg="#F0F7FF")
+                contenido.pack(fill="both", expand=True, padx=12, pady=10)
+
+                tk.Label(contenido, text=f"{cliente.usuario}", bg="#F0F7FF", fg="#222222",
+                         font=("Segoe UI", 14, "bold"), wraplength=240, justify="left").pack(anchor="w")
+                tk.Label(contenido, text=f"{cliente.email}", bg="#F0F7FF", fg="#444444",
+                         font=("Segoe UI", 12), wraplength=240, justify="left").pack(anchor="w", pady=(6, 6))
 
                 estado_color = "#4CAF50" if cliente.pagado else "#F44336"
                 estado_texto = "Pagado" if cliente.pagado else "Moroso"
-                tk.Label(tarjeta, text=f"Estado: {estado_texto}", bg="#F5F5F5",
-                         fg=estado_color, font=("Segoe UI", 12, "bold")).pack(pady=(0, 8))
+                tk.Label(contenido, text=f"Estado: {estado_texto}", bg="#F0F7FF",
+                         fg=estado_color, font=("Segoe UI", 12, "bold")).pack(anchor="w")
+
+                # Hover efecto
+                def _on_enter(e, f=tarjeta_frame, c=contenido):
+                    f.configure(bg="#E3F2FD")
+                    c.configure(bg="#E3F2FD")
+
+                def _on_leave(e, f=tarjeta_frame, c=contenido):
+                    f.configure(bg="#F0F7FF")
+                    c.configure(bg="#F0F7FF")
+
+                tarjeta_frame.bind("<Enter>", _on_enter)
+                tarjeta_frame.bind("<Leave>", _on_leave)
 
                 index += 1
 

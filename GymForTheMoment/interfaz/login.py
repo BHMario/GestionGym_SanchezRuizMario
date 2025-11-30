@@ -2,14 +2,14 @@ import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_clientes import ServicioClientes
 from interfaz.menu_principal import MenuPrincipal
+from utilidades.ui import set_uniform_window
 
 class Login:
     def __init__(self, root):
         self.root = root
         self.root.title("Gym For The Moment - Inicio de Sesión")
-        self.root.geometry("1100x750")
-        self.root.resizable(False, False)
-        self.root.configure(bg="#FFFFFF")
+        # Ajustar tamaño uniforme y centrado
+        set_uniform_window(self.root, width_frac=0.6, height_frac=0.7, min_width=800, min_height=600)
 
         self.servicio_clientes = ServicioClientes()
         self.servicio_clientes.crear_usuarios_iniciales()

@@ -79,45 +79,46 @@ class VentanaNotificaciones:
         self.root.after(5000, self.actualizar_periodicamente)
 
     def _crear_tarjeta_notificacion(self, solicitud):
-        tarjeta_frame = tk.Frame(self.scrollable_frame, bg="#F5F5F5", relief="solid", bd=1)
+        # Tarjeta con estilo similar a Gestión de Reservas
+        tarjeta_frame = tk.Frame(self.scrollable_frame, bg="#F0F7FF", relief="solid", bd=1)
         tarjeta_frame.pack(fill="x", pady=10, padx=5)
 
         # Contenido principal
-        contenido = tk.Frame(tarjeta_frame, bg="#F5F5F5")
+        contenido = tk.Frame(tarjeta_frame, bg="#F0F7FF")
         contenido.pack(fill="both", expand=True, padx=15, pady=12)
 
         # Primera fila: Cliente y Aparato
-        titulo_frame = tk.Frame(contenido, bg="#F5F5F5")
+        titulo_frame = tk.Frame(contenido, bg="#F0F7FF")
         titulo_frame.pack(fill="x", pady=(0, 8))
 
-        tk.Label(titulo_frame, text=f"Cliente: ", bg="#F5F5F5", fg="#666666",
+        tk.Label(titulo_frame, text=f"Cliente: ", bg="#F0F7FF", fg="#666666",
                  font=("Segoe UI", 10, "bold")).pack(side="left")
-        tk.Label(titulo_frame, text=f"{solicitud.cliente}", bg="#F5F5F5", fg="#222222",
-                 font=("Segoe UI", 11, "bold")).pack(side="left", padx=(0, 15))
+        tk.Label(titulo_frame, text=f"{solicitud.cliente}", bg="#F0F7FF", fg="#222222",
+                 font=("Segoe UI", 11, "bold"), wraplength=400, justify="left").pack(side="left", padx=(0, 15))
 
-        tk.Label(titulo_frame, text=f"Aparato/Clase: ", bg="#F5F5F5", fg="#666666",
+        tk.Label(titulo_frame, text=f"Aparato/Clase: ", bg="#F0F7FF", fg="#666666",
                  font=("Segoe UI", 10, "bold")).pack(side="left")
-        tk.Label(titulo_frame, text=f"{solicitud.aparato}", bg="#F5F5F5", fg="#2196F3",
-                 font=("Segoe UI", 11, "bold")).pack(side="left")
+        tk.Label(titulo_frame, text=f"{solicitud.aparato}", bg="#F0F7FF", fg="#2196F3",
+                 font=("Segoe UI", 11, "bold"), wraplength=300, justify="left").pack(side="left")
 
         # Segunda fila: Hora y Estado
-        info_frame = tk.Frame(contenido, bg="#F5F5F5")
+        info_frame = tk.Frame(contenido, bg="#F0F7FF")
         info_frame.pack(fill="x", pady=(0, 10))
 
-        tk.Label(info_frame, text=f"Hora: ", bg="#F5F5F5", fg="#666666",
+        tk.Label(info_frame, text=f"Hora: ", bg="#F0F7FF", fg="#666666",
                  font=("Segoe UI", 10, "bold")).pack(side="left")
-        tk.Label(info_frame, text=f"{solicitud.hora}", bg="#F5F5F5", fg="#222222",
-                 font=("Segoe UI", 10)).pack(side="left", padx=(0, 15))
+        tk.Label(info_frame, text=f"{solicitud.hora}", bg="#F0F7FF", fg="#222222",
+                 font=("Segoe UI", 10), wraplength=300, justify="left").pack(side="left", padx=(0, 15))
 
-        tk.Label(info_frame, text=f"Estado: ", bg="#F5F5F5", fg="#666666",
+        tk.Label(info_frame, text=f"Estado: ", bg="#F0F7FF", fg="#666666",
                  font=("Segoe UI", 10, "bold")).pack(side="left")
 
         estado_color = "#FF9800" if solicitud.estado.lower() == "pendiente" else "#4CAF50"
-        tk.Label(info_frame, text=f"{solicitud.estado}", bg="#F5F5F5", fg=estado_color,
+        tk.Label(info_frame, text=f"{solicitud.estado}", bg="#F0F7FF", fg=estado_color,
                  font=("Segoe UI", 10, "bold")).pack(side="left")
 
         # Botones
-        botones_frame = tk.Frame(contenido, bg="#F5F5F5")
+        botones_frame = tk.Frame(contenido, bg="#F0F7FF")
         botones_frame.pack(fill="x", pady=(5, 0))
 
         btn_aceptar = tk.Button(botones_frame, text="✓ Aceptar", bg="#4CAF50", fg="white",
@@ -132,18 +133,18 @@ class VentanaNotificaciones:
 
         # Efecto hover
         def on_enter(e):
-            tarjeta_frame.configure(bg="#EEEEEE")
-            contenido.configure(bg="#EEEEEE")
-            titulo_frame.configure(bg="#EEEEEE")
-            info_frame.configure(bg="#EEEEEE")
-            botones_frame.configure(bg="#EEEEEE")
+            tarjeta_frame.configure(bg="#E3F2FD")
+            contenido.configure(bg="#E3F2FD")
+            titulo_frame.configure(bg="#E3F2FD")
+            info_frame.configure(bg="#E3F2FD")
+            botones_frame.configure(bg="#E3F2FD")
 
         def on_leave(e):
-            tarjeta_frame.configure(bg="#F5F5F5")
-            contenido.configure(bg="#F5F5F5")
-            titulo_frame.configure(bg="#F5F5F5")
-            info_frame.configure(bg="#F5F5F5")
-            botones_frame.configure(bg="#F5F5F5")
+            tarjeta_frame.configure(bg="#F0F7FF")
+            contenido.configure(bg="#F0F7FF")
+            titulo_frame.configure(bg="#F0F7FF")
+            info_frame.configure(bg="#F0F7FF")
+            botones_frame.configure(bg="#F0F7FF")
 
         tarjeta_frame.bind("<Enter>", on_enter)
         tarjeta_frame.bind("<Leave>", on_leave)

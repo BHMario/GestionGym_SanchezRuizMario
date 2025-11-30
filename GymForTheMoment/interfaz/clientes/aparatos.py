@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_aparatos import ServicioAparatos
 from servicios.servicio_reservas import ServicioReservas
+from utilidades.ui import set_uniform_window
 import datetime
 
 def aclarar_color(hex_color, factor=0.2):
@@ -16,7 +17,7 @@ class VentanaAparatos:
     def __init__(self, root, cliente_actual="usuario1"):
         self.root = root
         self.root.title("Aparatos - Gym For The Moment")
-        self.root.geometry("1000x700")
+        set_uniform_window(self.root, width_frac=0.7, height_frac=0.75, min_width=1000, min_height=700)
         self.root.configure(bg="#FFFFFF")
         self.cliente_actual = cliente_actual
 
@@ -114,7 +115,7 @@ class VentanaAparatos:
     def _detalle_aparato(self, aparato):
         ventana_detalle = tk.Toplevel(self.root)
         ventana_detalle.title(f"{aparato.nombre} - Detalle")
-        ventana_detalle.geometry("500x450")
+        set_uniform_window(ventana_detalle, width_frac=0.4, height_frac=0.55, min_width=480, min_height=420)
         ventana_detalle.configure(bg="#FFFFFF")
 
         tk.Button(ventana_detalle, text="← Volver", bg="#333333", fg="white",

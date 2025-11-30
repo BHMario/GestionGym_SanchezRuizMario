@@ -10,6 +10,7 @@ from interfaz.administradores.gestion_recibos import VentanaGestionRecibos
 from interfaz.administradores.notificaciones import VentanaNotificaciones
 
 from utilidades.constantes import ROL_CLIENTE, ROL_ADMINISTRADOR
+from utilidades.ui import set_uniform_window
 
 class MenuPrincipal:
     def __init__(self, root, rol, nombre_usuario):
@@ -18,7 +19,8 @@ class MenuPrincipal:
         self.nombre_usuario = nombre_usuario
 
         self.root.title("Gym For The Moment - Menú Principal")
-        self.root.geometry("1000x700")
+        # Ventana principal uniformizada
+        set_uniform_window(self.root, width_frac=0.7, height_frac=0.75, min_width=1000, min_height=700)
         self.root.configure(bg="#FFFFFF")
         self.root.resizable(False, False)
 
@@ -94,34 +96,42 @@ class MenuPrincipal:
     # VENTANAS SECUNDARIAS
     def abrir_aparatos(self):
         ventana = tk.Toplevel(self.root)
+        set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
         VentanaAparatos(ventana)
 
     def abrir_clases(self):
         ventana = tk.Toplevel(self.root)
+        set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
         VentanaClases(ventana)
 
     def abrir_rutinas(self):
         ventana = tk.Toplevel(self.root)
+        set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
         VentanaRutinas(ventana)
 
     def abrir_pagos(self):
         ventana = tk.Toplevel(self.root)
+        set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
         VentanaPagos(ventana, cliente_actual=self.nombre_usuario, callback_refrescar=self._refrescar_gestion_usuarios)
 
     def abrir_gestion_usuarios(self):
         self.ventana_gestion_usuarios = tk.Toplevel(self.root)
+        set_uniform_window(self.ventana_gestion_usuarios, width_frac=0.7, height_frac=0.75)
         VentanaGestionUsuarios(self.ventana_gestion_usuarios)
 
     def abrir_gestion_reservas(self):
         ventana = tk.Toplevel(self.root)
+        set_uniform_window(ventana, width_frac=0.75, height_frac=0.8)
         VentanaGestionReservas(ventana)
 
     def abrir_gestion_recibos(self):
         ventana = tk.Toplevel(self.root)
+        set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
         VentanaGestionRecibos(ventana)
 
     def abrir_notificaciones(self):
         ventana = tk.Toplevel(self.root)
+        set_uniform_window(ventana, width_frac=0.7, height_frac=0.75)
         VentanaNotificaciones(ventana)
 
     def _refrescar_gestion_usuarios(self):

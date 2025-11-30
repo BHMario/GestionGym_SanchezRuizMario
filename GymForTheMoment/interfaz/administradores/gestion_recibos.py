@@ -24,14 +24,20 @@ class VentanaGestionRecibos:
         style.configure("TButton", font=("Segoe UI", 12, "bold"))
 
     def _construir_interfaz(self):
-        tk.Label(self.root, text="Gestión de Recibos", bg="#FFFFFF", fg="#222222",
-                 font=("Segoe UI", 24, "bold")).pack(pady=20)
+        header = tk.Frame(self.root, bg="#FFFFFF")
+        header.pack(fill="x", pady=20, padx=20)
 
-        tk.Button(self.root, text="Generar Recibos Mensuales", bg="#64B5F6", fg="white",
-                  font=("Segoe UI", 12, "bold"), command=self.generar_recibos).pack(pady=10)
+        tk.Label(header, text="Gestión de Recibos", bg="#FFFFFF", fg="#222222",
+                 font=("Segoe UI", 24, "bold")).pack(side="left")
 
-        tk.Button(self.root, text="Ver Clientes Morosos", bg="#F06292", fg="white",
-                  font=("Segoe UI", 12, "bold"), command=self.ver_morosos).pack(pady=5)
+        acciones = tk.Frame(header, bg="#FFFFFF")
+        acciones.pack(side="right")
+
+        tk.Button(acciones, text="Generar Recibos Mensuales", bg="#64B5F6", fg="white",
+                  font=("Segoe UI", 12, "bold"), command=self.generar_recibos, relief="flat", padx=12, pady=6).pack(side="left", padx=8)
+
+        tk.Button(acciones, text="Ver Clientes Morosos", bg="#F06292", fg="white",
+                  font=("Segoe UI", 12, "bold"), command=self.ver_morosos, relief="flat", padx=12, pady=6).pack(side="left")
 
         self.canvas = tk.Canvas(self.root, bg="#FFFFFF", highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
@@ -43,6 +49,7 @@ class VentanaGestionRecibos:
         self.window_id = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfigure(self.window_id, width=e.width))
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.bind_all("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
 
     def generar_recibos(self):
         self.servicio_recibos.generar_recibos_mes()
@@ -68,11 +75,27 @@ class VentanaGestionRecibos:
         tk.Label(self.scrollable_frame, text="Clientes Morosos", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 16, "bold")).pack(pady=10)
 
-        color_base = "#F06292"
         for cliente in morosos:
-            tarjeta = tk.Frame(self.scrollable_frame, bg=color_base, width=600, height=50, bd=0)
-            tarjeta.pack(pady=5, padx=10, fill="x")
+            tarjeta = tk.Frame(self.scrollable_frame, bg="#F0F7FF", width=640, height=60, bd=1, relief="solid")
+            tarjeta.pack(pady=6, padx=10, fill="x")
             tarjeta.pack_propagate(False)
 
-            tk.Label(tarjeta, text=f"{cliente.usuario} - {cliente.email}", bg=color_base, fg="white",
-                     font=("Segoe UI", 12, "bold")).pack(expand=True, fill="both")
+            contenido = tk.Frame(tarjeta, bg="#F0F7FF")
+            contenido.pack(fill="both", expand=True, padx=12, pady=6)
+
+            tk.Label(contenido, text=f"{cliente.usuario}", bg="#F0F7FF", fg="#222222",
+                     font=("Segoe UI", 12, "bold")).pack(side="left")
+            tk.Label(contenido, text=f"{cliente.email}", bg="#F0F7FF", fg="#444444",
+                     font=("Segoe UI", 12)).pack(side="left", padx=10)
+
+            # Hover
+            def _on_enter(e, f=tarjeta, c=contenido):
+                f.configure(bg="#E3F2FD")
+                c.configure(bg="#E3F2FD")
+
+            def _on_leave(e, f=tarjeta, c=contenido):
+                f.configure(bg="#F0F7FF")
+                c.configure(bg="#F0F7FF")
+
+            tarjeta.bind("<Enter>", _on_enter)
+            tarjeta.bind("<Leave>", _on_leave)
