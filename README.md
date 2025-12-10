@@ -1,1 +1,0 @@
-# GestionGym_SanchezRuizMario
