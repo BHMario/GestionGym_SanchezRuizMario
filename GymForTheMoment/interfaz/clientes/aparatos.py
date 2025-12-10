@@ -199,6 +199,67 @@ class VentanaAparatos:
 
         tk.Label(frame_horas, text="Seleccione franja horaria (30 min):", bg="#FFFFFF", font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(0, 8))
 
+        # Obtener las franjas disponibles para la fecha seleccionada
+        def actualizar_franjas_disponibles(*args):
+            # Limpiar franjas anteriores
+            for widget in scrollable_horas.winfo_children():
+                widget.destroy()
+            frames_horas.clear()
+            
+            # Obtener fecha
+            try:
+                if hasattr(date_entry, 'get_date'):
+                    fecha_obj = date_entry.get_date()
+                    fecha_str = fecha_obj.strftime("%Y-%m-%d")
+                else:
+                    fecha_str = date_entry.get().strip()
+                    fecha_obj = dt.datetime.strptime(fecha_str, "%Y-%m-%d").date()
+            except Exception:
+                return
+            
+            # Obtener todas las franjas posibles con estado (libre/ocupada)
+            try:
+                franjas = self.servicio_reservas.generar_todas_horas_disponibles(aparato.nombre, fecha_str)
+            except Exception:
+                franjas = []
+            
+            # Generar UI para franjas con indicador visual
+            for idx, franja in enumerate(franjas):
+                h_inicio = int(franja['inicio'].split(":")[0])
+                m_inicio = int(franja['inicio'].split(":")[1])
+                franja_text = f"{franja['inicio']} - {franja['fin']}"
+                
+                # Color según estado
+                if franja['estado'] == 'ocupada':
+                    color_bg = "#FFEBEE"
+                    color_text = "#C62828"
+                    es_seleccionable = False
+                    texto_extra = f" (Ocupado: {franja['cliente']})"
+                else:
+                    color_bg = "#E8F5E9"
+                    color_text = "#2E7D32"
+                    es_seleccionable = True
+                    texto_extra = " (Libre)"
+                
+                # Frame para cada franja como tarjeta
+                franja_frame = tk.Frame(scrollable_horas, bg=color_bg, relief="solid", bd=1)
+                row = idx // 5
+                col = idx % 5
+                franja_frame.grid(row=row, column=col, sticky="nsew", padx=4, pady=4)
+                
+                if es_seleccionable:
+                    # Radiobutton si está libre
+                    rb = tk.Radiobutton(franja_frame, text=franja_text + texto_extra, variable=hora_seleccionada, 
+                                       value=franja['inicio'], bg=color_bg, fg=color_text, font=("Segoe UI", 8, "bold"), 
+                                       selectcolor="#64B5F6", activebackground="#C8E6C9", activeforeground="#1B5E20")
+                    rb.pack(expand=True, fill="both", padx=8, pady=6)
+                    
+                    frames_horas.append({"frame": franja_frame, "rb": rb, "hora": franja['inicio']})
+                else:
+                    # Label si está ocupada (no seleccionable)
+                    tk.Label(franja_frame, text=franja_text + texto_extra, bg=color_bg, fg=color_text, 
+                            font=("Segoe UI", 7, "bold"), wraplength=80, justify="center").pack(expand=True, fill="both", padx=6, pady=4)
+        
         # Canvas con scrollbar para las franjas
         canvas_horas = tk.Canvas(frame_horas, bg="#FFFFFF", highlightthickness=0, height=220)
         scrollbar_horas = tk.Scrollbar(frame_horas, orient="vertical", command=canvas_horas.yview)
@@ -217,68 +278,15 @@ class VentanaAparatos:
         canvas_horas.bind("<MouseWheel>", _on_canvas_scroll)
 
         hora_seleccionada = tk.StringVar()
-        
-        # Lista para rastrear frames y radiobuttons (para actualizar estilos correctamente)
         frames_horas = []
+        
+        # Actualizar franjas cuando cambia la fecha
+        if hasattr(date_entry, 'bind'):
+            date_entry.bind("<<Change>>", actualizar_franjas_disponibles)
+        
+        # Cargar franjas iniciales
+        actualizar_franjas_disponibles()
 
-        # Generar franjas de 30 min (06:00 - 23:00) en grid de 5 columnas
-        horas_disponibles = []
-        for h in range(6, 23):
-            for m in [0, 30]:
-                horas_disponibles.append(f"{h:02d}:{m:02d}")
-
-        # Grid layout para mostrar franjas en cinco columnas con estilo
-        for idx, hora in enumerate(horas_disponibles):
-            h_inicio = int(hora.split(":")[0])
-            m_inicio = int(hora.split(":")[1])
-            h_fin = h_inicio if m_inicio < 30 else h_inicio + 1
-            m_fin = 30 if m_inicio == 0 else 0
-            franja_text = f"{hora} - {h_fin:02d}:{m_fin:02d}"
-
-            # Frame para cada franja como tarjeta
-            franja_frame = tk.Frame(scrollable_horas, bg="#F5F5F5", relief="solid", bd=1)
-            row = idx // 5
-            col = idx % 5
-            franja_frame.grid(row=row, column=col, sticky="nsew", padx=4, pady=4)
-
-            # Radiobutton dentro del frame
-            rb = tk.Radiobutton(franja_frame, text=franja_text, variable=hora_seleccionada, value=hora, 
-                               bg="#F5F5F5", fg="#222222", font=("Segoe UI", 9, "bold"), 
-                               selectcolor="#64B5F6", activebackground="#E3F2FD", activeforeground="#1976D2")
-            rb.pack(expand=True, fill="both", padx=8, pady=6)
-
-            # Guardar referencias
-            frames_horas.append({"frame": franja_frame, "rb": rb, "hora": hora})
-
-            # Efecto hover mejorado
-            def _on_enter(e, f=franja_frame, rb_inner=rb, h=hora):
-                f.configure(bg="#E3F2FD", relief="raised")
-                rb_inner.configure(bg="#E3F2FD")
-
-            def _on_leave(e, f=franja_frame, rb_inner=rb, h=hora):
-                if hora_seleccionada.get() != h:
-                    f.configure(bg="#F5F5F5", relief="solid")
-                    rb_inner.configure(bg="#F5F5F5")
-                else:
-                    f.configure(bg="#BBDEFB", relief="raised")
-                    rb_inner.configure(bg="#BBDEFB")
-
-            franja_frame.bind("<Enter>", _on_enter)
-            franja_frame.bind("<Leave>", _on_leave)
-            rb.bind("<Enter>", _on_enter)
-            rb.bind("<Leave>", _on_leave)
-
-            # Al seleccionar, cambiar color de fondo de todas las franjas
-            def _on_select():
-                for item in frames_horas:
-                    if hora_seleccionada.get() == item["hora"]:
-                        item["frame"].configure(bg="#BBDEFB", relief="raised")
-                        item["rb"].configure(bg="#BBDEFB")
-                    else:
-                        item["frame"].configure(bg="#F5F5F5", relief="solid")
-                        item["rb"].configure(bg="#F5F5F5")
-
-            rb.config(command=_on_select)
 
         label_error = tk.Label(dlg, text="", bg="#FFFFFF", fg="red", font=("Segoe UI", 10))
         label_error.pack()

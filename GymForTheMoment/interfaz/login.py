@@ -66,12 +66,18 @@ class Login:
             self.label_error.config(text="Debe completar todos los campos")
             return
 
+        if len(usuario) < 1 or len(contrasena) < 1:
+            self.label_error.config(text="Usuario o contraseña vacíos")
+            return
+
         usuario_db = self.servicio_clientes.obtener_cliente_por_usuario(usuario)
 
         if usuario_db and contrasena == usuario_db.contrasena:
             rol = usuario_db.rol
         else:
             self.label_error.config(text="Usuario o contraseña incorrectos")
+            # Limpiar campo de contraseña por seguridad
+            self.entry_contrasena.delete(0, tk.END)
             return
 
         self.root.destroy()
@@ -84,3 +90,4 @@ class Login:
         self.root.withdraw()
         registro_ventana = tk.Toplevel()
         Registro(registro_ventana, self.root)
+

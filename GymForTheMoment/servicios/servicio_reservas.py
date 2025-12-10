@@ -183,3 +183,78 @@ class ServicioReservas:
         filas = cursor.fetchall()
         conn.close()
         return [Reserva(*f) for f in filas]
+
+    def generar_horario_ocupacion_por_dia(self, aparato, fecha_str):
+        """
+        Genera un listado exacto de horas ocupadas para un aparato en un día.
+        Devuelve una lista de tuplas (hora_inicio, hora_fin, cliente) ordenadas.
+        """
+        import datetime
+        try:
+            fecha = datetime.datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        except Exception:
+            raise ValueError("Formato de fecha inválido. Use 'YYYY-MM-DD'")
+
+        reservas = self.listar_ocupacion_por_dia(aparato, fecha_str)
+        horario_ocupado = []
+        
+        for reserva in reservas:
+            try:
+                inicio = datetime.datetime.strptime(reserva.hora_inicio, "%Y-%m-%d %H:%M:%S")
+                fin = datetime.datetime.strptime(reserva.hora_fin, "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                try:
+                    inicio = datetime.datetime.strptime(reserva.hora_inicio, "%Y-%m-%d %H:%M")
+                    fin = datetime.datetime.strptime(reserva.hora_fin, "%Y-%m-%d %H:%M")
+                except Exception:
+                    continue
+            
+            horario_ocupado.append({
+                'inicio': inicio.strftime("%H:%M"),
+                'fin': fin.strftime("%H:%M"),
+                'cliente': reserva.cliente,
+                'estado': reserva.estado
+            })
+        
+        # Ordenar por hora de inicio
+        horario_ocupado.sort(key=lambda x: x['inicio'])
+        return horario_ocupado
+
+    def generar_todas_horas_disponibles(self, aparato, fecha_str):
+        """
+        Genera un listado completo de todas las franjas horarias disponibles (30 min)
+        para un aparato en un día, indicando cuáles están libres u ocupadas.
+        """
+        import datetime
+        try:
+            fecha = datetime.datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        except Exception:
+            raise ValueError("Formato de fecha inválido. Use 'YYYY-MM-DD'")
+
+        # Generar todas las franjas posibles (00:00-23:30 en intervalos de 30 min)
+        todas_franjas = []
+        hora_actual = datetime.datetime.combine(fecha, datetime.time(0, 0))
+        fin_dia = datetime.datetime.combine(fecha, datetime.time(23, 59, 59))
+        
+        while hora_actual < fin_dia:
+            hora_siguiente = hora_actual + datetime.timedelta(minutes=30)
+            todas_franjas.append({
+                'inicio': hora_actual.strftime("%H:%M"),
+                'fin': hora_siguiente.strftime("%H:%M"),
+                'estado': 'libre',
+                'cliente': None
+            })
+            hora_actual = hora_siguiente
+        
+        # Marcar como ocupadas las franjas que tienen reserva
+        horario_ocupado = self.generar_horario_ocupacion_por_dia(aparato, fecha_str)
+        
+        for franja in todas_franjas:
+            for ocupada in horario_ocupado:
+                if franja['inicio'] == ocupada['inicio']:
+                    franja['estado'] = 'ocupada'
+                    franja['cliente'] = ocupada['cliente']
+                    break
+        
+        return todas_franjas
+

@@ -69,6 +69,76 @@ class ServicioRecibos:
         conn.close()
         return [f[0] for f in filas]
 
+    def obtener_morosos_con_detalles(self, mes=None):
+        """
+        Retorna una lista exacta de morosos con detalles:
+        - Cliente
+        - Email
+        - Mes
+        - Fecha de creación del recibo
+        - Estado actual del pago
+        """
+        if mes is None:
+            mes = datetime.datetime.now().strftime("%Y-%m")
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT cliente, mes, pagado, generado_en 
+            FROM recibos 
+            WHERE mes=? AND pagado=0
+            ORDER BY cliente
+        """, (mes,))
+        filas = cursor.fetchall()
+        conn.close()
+        
+        morosos = []
+        for fila in filas:
+            cliente_obj = self.servicio_clientes.obtener_cliente_por_usuario(fila[0])
+            if cliente_obj:
+                morosos.append({
+                    'usuario': fila[0],
+                    'email': cliente_obj.email,
+                    'mes': fila[1],
+                    'pagado': bool(fila[2]),
+                    'fecha_generacion': fila[3]
+                })
+        
+        return morosos
+
+    def obtener_resumen_cobranza(self, mes=None):
+        """
+        Genera un resumen exacto de cobranza:
+        - Total de clientes
+        - Clientes pagados
+        - Clientes morosos
+        - Porcentaje de cobranza
+        """
+        if mes is None:
+            mes = datetime.datetime.now().strftime("%Y-%m")
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM recibos WHERE mes=?", (mes,))
+        total = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM recibos WHERE mes=? AND pagado=1", (mes,))
+        pagados = cursor.fetchone()[0]
+        
+        morosos = total - pagados
+        porcentaje = (pagados / total * 100) if total > 0 else 0
+        
+        conn.close()
+        
+        return {
+            'mes': mes,
+            'total_clientes': total,
+            'pagados': pagados,
+            'morosos': morosos,
+            'porcentaje_cobranza': round(porcentaje, 2)
+        }
+
     def marcar_recibo_pagado(self, cliente, mes=None):
         """Marcar como pagado el recibo del cliente para el mes dado. Si no existe, lo crea marcado como pagado."""
         if mes is None:
@@ -84,3 +154,4 @@ class ServicioRecibos:
             cursor.execute("INSERT INTO recibos (cliente, mes, pagado) VALUES (?, ?, 1)", (cliente, mes))
         conn.commit()
         conn.close()
+

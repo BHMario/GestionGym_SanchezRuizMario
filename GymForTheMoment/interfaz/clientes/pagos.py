@@ -99,16 +99,66 @@ class VentanaPagos:
                 return
 
         metodo = self.metodo_pago.get()
+        
+        # Validaciones adicionales según el método
+        try:
+            if metodo == "Tarjeta":
+                num_tarjeta = self.campos_pago[0].get().strip()
+                fecha_venc = self.campos_pago[1].get().strip()
+                cvv = self.campos_pago[2].get().strip()
+                
+                # Validar número de tarjeta (solo dígitos, 13-19 dígitos)
+                if not num_tarjeta.isdigit() or len(num_tarjeta) < 13 or len(num_tarjeta) > 19:
+                    self.label_mensaje.config(text="Número de tarjeta inválido (13-19 dígitos)", fg="red")
+                    return
+                
+                # Validar fecha (MM/AA)
+                if "/" not in fecha_venc or len(fecha_venc.split("/")) != 2:
+                    self.label_mensaje.config(text="Fecha de vencimiento inválida (formato: MM/AA)", fg="red")
+                    return
+                mes, año = fecha_venc.split("/")
+                if not mes.isdigit() or not año.isdigit() or int(mes) < 1 or int(mes) > 12:
+                    self.label_mensaje.config(text="Mes inválido en fecha de vencimiento", fg="red")
+                    return
+                
+                # Validar CVV (3-4 dígitos)
+                if not cvv.isdigit() or len(cvv) < 3 or len(cvv) > 4:
+                    self.label_mensaje.config(text="CVV inválido (3-4 dígitos)", fg="red")
+                    return
+                    
+            elif metodo == "PayPal":
+                email = self.campos_pago[0].get().strip()
+                # Validar email básico
+                if "@" not in email or "." not in email.split("@")[-1]:
+                    self.label_mensaje.config(text="Email de PayPal inválido", fg="red")
+                    return
+                    
+            elif metodo == "Bizum":
+                telefono = self.campos_pago[0].get().strip()
+                # Validar teléfono (solo dígitos, al menos 9)
+                if not telefono.isdigit() or len(telefono) < 9:
+                    self.label_mensaje.config(text="Número de teléfono inválido (al menos 9 dígitos)", fg="red")
+                    return
+        except Exception as e:
+            self.label_mensaje.config(text=f"Error en validación: {str(e)}", fg="red")
+            return
 
-        self.servicio_clientes.marcar_pagado(self.cliente_actual)
+        # Procesar el pago
+        try:
+            self.servicio_clientes.marcar_pagado(self.cliente_actual)
+            self.label_mensaje.config(
+                text=f"✓ Pago mediante {metodo} completado correctamente. ¡Gracias, {self.cliente_actual}!", 
+                fg="green"
+            )
 
-        self.label_mensaje.config(text=f"Pago mediante {metodo} completado correctamente. ¡Gracias, {self.cliente_actual}!", fg="green")
+            if self.callback_refrescar:
+                try:
+                    self.callback_refrescar()
+                except Exception:
+                    pass
 
-        if self.callback_refrescar:
-            try:
-                self.callback_refrescar()
-            except Exception:
-                pass
+            for campo in self.campos_pago:
+                campo.delete(0, tk.END)
+        except Exception as e:
+            self.label_mensaje.config(text=f"Error al procesar el pago: {str(e)}", fg="red")
 
-        for campo in self.campos_pago:
-            campo.delete(0, tk.END)

@@ -122,3 +122,49 @@ class ServicioAparatos:
             hora_fin = f[6] if f[6] is not None else None
             resultados.append({"id": f[0], "nombre": f[1], "ocupante": ocupante, "hora_fin": hora_fin})
         return resultados
+
+    def obtener_aparatos_por_cliente(self, cliente):
+        """Retorna todos los aparatos actualmente ocupados por un cliente específico"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, nombre, descripcion, ocupado, musculo, ocupante, hora_fin_ocupacion 
+            FROM aparatos 
+            WHERE ocupado=1 AND ocupante=?
+        """, (cliente,))
+        filas = cursor.fetchall()
+        conn.close()
+        
+        resultados = []
+        for f in filas:
+            hora_fin = f[6] if f[6] is not None else None
+            resultados.append({
+                "id": f[0], 
+                "nombre": f[1], 
+                "ocupante": f[5],
+                "hora_fin": hora_fin
+            })
+        return resultados
+
+    def obtener_resumen_ocupacion(self):
+        """Retorna un resumen de ocupación: aparatos totales, ocupados, libres"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM aparatos")
+        total = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM aparatos WHERE ocupado=1")
+        ocupados = cursor.fetchone()[0]
+        
+        libres = total - ocupados
+        
+        conn.close()
+        
+        return {
+            'total': total,
+            'ocupados': ocupados,
+            'libres': libres,
+            'porcentaje_ocupacion': round((ocupados / total * 100), 2) if total > 0 else 0
+        }
+

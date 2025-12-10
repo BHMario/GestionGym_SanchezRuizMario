@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from servicios.servicio_clientes import ServicioClientes
-from utilidades.validadores import validar_email
+from utilidades.validadores import validar_email, validar_usuario, validar_contrasena
 from utilidades.ui import set_uniform_window
 
 class Registro:
@@ -45,6 +45,8 @@ class Registro:
         ttk.Label(self.marco, text="Usuario:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(0, 5))
         self.entry_usuario = ttk.Entry(self.marco)
         self.entry_usuario.pack(fill="x", padx=50, pady=(0, 5))
+        tk.Label(self.marco, text="3-20 caracteres (letras, números, guiones)", bg="#F5F5F5", 
+                fg="#888888", font=("Segoe UI", 8)).pack(anchor="w", padx=50, pady=(0, 5))
 
         ttk.Label(self.marco, text="Email:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(10, 5))
         self.entry_email = ttk.Entry(self.marco)
@@ -52,7 +54,9 @@ class Registro:
 
         ttk.Label(self.marco, text="Contraseña:", background="#F5F5F5").pack(anchor="w", padx=50, pady=(10, 5))
         self.entry_contrasena = ttk.Entry(self.marco, show="*")
-        self.entry_contrasena.pack(fill="x", padx=50, pady=(0, 15))
+        self.entry_contrasena.pack(fill="x", padx=50, pady=(0, 5))
+        tk.Label(self.marco, text="Mínimo 6 caracteres (letras + números)", bg="#F5F5F5", 
+                fg="#888888", font=("Segoe UI", 8)).pack(anchor="w", padx=50, pady=(0, 15))
 
         self.label_error = tk.Label(self.marco, text="", fg="red", bg="#F5F5F5", font=("Segoe UI", 10))
         self.label_error.pack(pady=(5, 10))
@@ -68,11 +72,21 @@ class Registro:
         email = self.entry_email.get().strip()
         contrasena = self.entry_contrasena.get().strip()
 
+        # Validaciones exhaustivas
         if not usuario or not email or not contrasena:
             self.label_error.config(text="Debe completar todos los campos")
             return
+        
+        if not validar_usuario(usuario):
+            self.label_error.config(text="Usuario inválido: 3-20 caracteres (letras, números, guiones)")
+            return
+        
         if not validar_email(email):
             self.label_error.config(text="Email inválido")
+            return
+        
+        if not validar_contrasena(contrasena):
+            self.label_error.config(text="Contraseña débil: mín 6 caracteres (letras + números)")
             return
 
         if self.servicio_clientes.obtener_cliente_por_usuario(usuario):
@@ -80,7 +94,7 @@ class Registro:
             return
 
         self.servicio_clientes.agregar_cliente(usuario=usuario, email=email, contrasena=contrasena)
-        self.label_error.config(fg="green", text="Usuario registrado correctamente")
+        self.label_error.config(fg="green", text="✓ Usuario registrado correctamente")
         self.root.after(1500, self._cerrar_y_volver_login)
 
     def _cerrar_y_volver_login(self):
@@ -90,3 +104,4 @@ class Registro:
     def cancelar_registro(self):
         self.root.destroy()
         self.login_root.deiconify()
+
