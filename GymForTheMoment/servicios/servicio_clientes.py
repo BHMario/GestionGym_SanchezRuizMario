@@ -120,6 +120,14 @@ class ServicioClientes:
 
     def marcar_pagado(self, usuario):
         self.actualizar_estado_pago(usuario, True)
+        # Intentar también actualizar el recibo del mes actual para mantener coherencia
+        try:
+            from servicios.servicio_recibos import ServicioRecibos
+            sr = ServicioRecibos(self.db_path)
+            sr.marcar_recibo_pagado(usuario)
+        except Exception:
+            # No bloqueamos el flujo por errores en recibos
+            pass
 
     def crear_usuarios_iniciales(self):
         if not self.obtener_cliente_por_usuario("Cliente1"):

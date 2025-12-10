@@ -63,19 +63,22 @@ class VentanaGestionRecibos:
     def ver_morosos(self):
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
+        # Mostrar morosos basados en la tabla 'recibos' para el mes actual
+        morosos_usernames = self.servicio_recibos.listar_morosos()
 
-        # ⬇️ CAMBIO: Ahora se consultan los morosos reales desde la tabla CLIENTES
-        morosos = [c for c in self.servicio_clientes.listar_clientes() if not c.pagado]
-
-        if not morosos:
-            tk.Label(self.scrollable_frame, text="No hay clientes morosos", bg="#FFFFFF",
+        if not morosos_usernames:
+            tk.Label(self.scrollable_frame, text="No hay clientes morosos (según recibos del mes)", bg="#FFFFFF",
                      fg="#444444", font=("Segoe UI", 12, "bold")).pack(pady=10)
             return
 
-        tk.Label(self.scrollable_frame, text="Clientes Morosos", bg="#FFFFFF", fg="#222222",
+        tk.Label(self.scrollable_frame, text="Clientes Morosos (según recibos)", bg="#FFFFFF", fg="#222222",
                  font=("Segoe UI", 16, "bold")).pack(pady=10)
 
-        for cliente in morosos:
+        for username in morosos_usernames:
+            cliente = self.servicio_clientes.obtener_cliente_por_usuario(username)
+            if not cliente:
+                continue
+
             tarjeta = tk.Frame(self.scrollable_frame, bg="#F0F7FF", width=640, height=60, bd=1, relief="solid")
             tarjeta.pack(pady=6, padx=10, fill="x")
             tarjeta.pack_propagate(False)

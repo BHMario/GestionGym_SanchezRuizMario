@@ -106,9 +106,10 @@ class VentanaNotificaciones:
         info_frame.pack(fill="x", pady=(0, 10))
 
         tk.Label(info_frame, text=f"Hora: ", bg="#F0F7FF", fg="#666666",
-                 font=("Segoe UI", 10, "bold")).pack(side="left")
-        tk.Label(info_frame, text=f"{solicitud.hora}", bg="#F0F7FF", fg="#222222",
-                 font=("Segoe UI", 10), wraplength=300, justify="left").pack(side="left", padx=(0, 15))
+             font=("Segoe UI", 10, "bold")).pack(side="left")
+        hora_text = f"{getattr(solicitud, 'hora_inicio', '')} → {getattr(solicitud, 'hora_fin', '')}"
+        tk.Label(info_frame, text=hora_text, bg="#F0F7FF", fg="#222222",
+             font=("Segoe UI", 10), wraplength=300, justify="left").pack(side="left", padx=(0, 15))
 
         tk.Label(info_frame, text=f"Estado: ", bg="#F0F7FF", fg="#666666",
                  font=("Segoe UI", 10, "bold")).pack(side="left")

@@ -110,6 +110,10 @@ class VentanaAparatos:
                              (t.configure(bg=aclarar_color(c, 0.3)), l.configure(bg=aclarar_color(c, 0.3))))
                 tarjeta.bind("<Leave>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
                              (t.configure(bg=c), l.configure(bg=c)))
+                nombre_label.bind("<Enter>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
+                                  (t.configure(bg=aclarar_color(c, 0.3)), l.configure(bg=aclarar_color(c, 0.3))))
+                nombre_label.bind("<Leave>", lambda e, t=tarjeta, l=nombre_label, c=color_base:
+                                  (t.configure(bg=c), l.configure(bg=c)))
                 index += 1
 
     def _detalle_aparato(self, aparato):
@@ -136,8 +140,8 @@ class VentanaAparatos:
         msg_reserva.pack(pady=10)
 
         tk.Button(ventana_detalle, text="Solicitar Reserva", bg="#64B5F6", fg="white",
-                  font=("Segoe UI", 12, "bold"),
-                  command=lambda: self._solicitar_reserva(aparato, msg_reserva, estado_label)).pack(pady=20)
+              font=("Segoe UI", 12, "bold"),
+              command=lambda: self._abrir_dialogo_reserva(aparato, msg_reserva, estado_label)).pack(pady=20)
 
         self._actualizar_estado_periodico(aparato, estado_label, ventana_detalle)
 
@@ -151,11 +155,169 @@ class VentanaAparatos:
         ventana.after(1000, lambda: self._actualizar_estado_periodico(aparato, estado_label, ventana))
 
     def _solicitar_reserva(self, aparato, msg_label, estado_label):
+        # Este método queda para compatibilidad pero no se usa directamente
+        raise NotImplementedError("Use el diálogo de selección de fecha/hora para reservar")
+
+    def _abrir_dialogo_reserva(self, aparato, msg_label, estado_label):
         if aparato.ocupado:
             msg_label.config(text=f"Lo sentimos, '{aparato.nombre}' ya está ocupado.", fg="red")
             return
 
-        hora_actual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.servicio_reservas.crear_reserva(self.cliente_actual, aparato.nombre, hora_actual)
-        msg_label.config(text=f"Su solicitud para '{aparato.nombre}' ha sido enviada al administrador", fg="green")
-        print(f"Notificación: Solicitud de reserva para '{aparato.nombre}' enviada por {self.cliente_actual}")
+        import datetime as dt
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Solicitar Reserva - Seleccione fecha y hora")
+        set_uniform_window(dlg, width_frac=0.5, height_frac=0.75, min_width=550, min_height=500)
+        dlg.configure(bg="#FFFFFF")
+
+        tk.Label(dlg, text=f"Reservar: {aparato.nombre}", bg="#FFFFFF", font=("Segoe UI", 14, "bold")).pack(pady=10)
+
+        # Frame para fecha con calendario (intenta usar tkcalendar, fallback a entrada manual)
+        frame_fecha = tk.Frame(dlg, bg="#FFFFFF")
+        frame_fecha.pack(pady=10, padx=20, fill="x")
+
+        tk.Label(frame_fecha, text="Seleccione fecha (L-V):", bg="#FFFFFF", font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(0, 5))
+        
+        date_entry = None
+        try:
+            from tkcalendar import DateEntry
+            date_entry = DateEntry(frame_fecha, width=12, background="darkblue", foreground="white", borderwidth=2, year=dt.datetime.now().year, month=dt.datetime.now().month, day=dt.datetime.now().day)
+            date_entry.pack(pady=5)
+        except ImportError:
+            # Fallback: entrada manual si tkcalendar no está instalado
+            frame_entrada = tk.Frame(frame_fecha, bg="#FFFFFF")
+            frame_entrada.pack(pady=5)
+            tk.Label(frame_entrada, text="Formato YYYY-MM-DD:", bg="#FFFFFF", font=("Segoe UI", 9)).pack(side="left", padx=(0, 5))
+            entry_fecha_manual = tk.Entry(frame_entrada, width=15)
+            entry_fecha_manual.pack(side="left")
+            entry_fecha_manual.insert(0, dt.datetime.now().strftime("%Y-%m-%d"))
+            date_entry = entry_fecha_manual
+
+        # Frame para horas en franjas de 30 minutos
+        frame_horas = tk.Frame(dlg, bg="#FFFFFF")
+        frame_horas.pack(pady=10, padx=20, fill="both", expand=True)
+
+        tk.Label(frame_horas, text="Seleccione franja horaria (30 min):", bg="#FFFFFF", font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(0, 8))
+
+        # Canvas con scrollbar para las franjas
+        canvas_horas = tk.Canvas(frame_horas, bg="#FFFFFF", highlightthickness=0, height=220)
+        scrollbar_horas = tk.Scrollbar(frame_horas, orient="vertical", command=canvas_horas.yview)
+        canvas_horas.configure(yscrollcommand=scrollbar_horas.set)
+        canvas_horas.pack(side="left", fill="both", expand=True, pady=5)
+        scrollbar_horas.pack(side="right", fill="y")
+
+        scrollable_horas = tk.Frame(canvas_horas, bg="#FFFFFF")
+        window_horas = canvas_horas.create_window((0, 0), window=scrollable_horas, anchor="nw")
+        canvas_horas.bind("<Configure>", lambda e: canvas_horas.itemconfigure(window_horas, width=e.width))
+        scrollable_horas.bind("<Configure>", lambda e: canvas_horas.configure(scrollregion=canvas_horas.bbox("all")))
+        
+        # Capturar scroll del canvas para no afectar ventana padre
+        def _on_canvas_scroll(event):
+            canvas_horas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        canvas_horas.bind("<MouseWheel>", _on_canvas_scroll)
+
+        hora_seleccionada = tk.StringVar()
+        
+        # Lista para rastrear frames y radiobuttons (para actualizar estilos correctamente)
+        frames_horas = []
+
+        # Generar franjas de 30 min (06:00 - 23:00) en grid de 5 columnas
+        horas_disponibles = []
+        for h in range(6, 23):
+            for m in [0, 30]:
+                horas_disponibles.append(f"{h:02d}:{m:02d}")
+
+        # Grid layout para mostrar franjas en cinco columnas con estilo
+        for idx, hora in enumerate(horas_disponibles):
+            h_inicio = int(hora.split(":")[0])
+            m_inicio = int(hora.split(":")[1])
+            h_fin = h_inicio if m_inicio < 30 else h_inicio + 1
+            m_fin = 30 if m_inicio == 0 else 0
+            franja_text = f"{hora} - {h_fin:02d}:{m_fin:02d}"
+
+            # Frame para cada franja como tarjeta
+            franja_frame = tk.Frame(scrollable_horas, bg="#F5F5F5", relief="solid", bd=1)
+            row = idx // 5
+            col = idx % 5
+            franja_frame.grid(row=row, column=col, sticky="nsew", padx=4, pady=4)
+
+            # Radiobutton dentro del frame
+            rb = tk.Radiobutton(franja_frame, text=franja_text, variable=hora_seleccionada, value=hora, 
+                               bg="#F5F5F5", fg="#222222", font=("Segoe UI", 9, "bold"), 
+                               selectcolor="#64B5F6", activebackground="#E3F2FD", activeforeground="#1976D2")
+            rb.pack(expand=True, fill="both", padx=8, pady=6)
+
+            # Guardar referencias
+            frames_horas.append({"frame": franja_frame, "rb": rb, "hora": hora})
+
+            # Efecto hover mejorado
+            def _on_enter(e, f=franja_frame, rb_inner=rb, h=hora):
+                f.configure(bg="#E3F2FD", relief="raised")
+                rb_inner.configure(bg="#E3F2FD")
+
+            def _on_leave(e, f=franja_frame, rb_inner=rb, h=hora):
+                if hora_seleccionada.get() != h:
+                    f.configure(bg="#F5F5F5", relief="solid")
+                    rb_inner.configure(bg="#F5F5F5")
+                else:
+                    f.configure(bg="#BBDEFB", relief="raised")
+                    rb_inner.configure(bg="#BBDEFB")
+
+            franja_frame.bind("<Enter>", _on_enter)
+            franja_frame.bind("<Leave>", _on_leave)
+            rb.bind("<Enter>", _on_enter)
+            rb.bind("<Leave>", _on_leave)
+
+            # Al seleccionar, cambiar color de fondo de todas las franjas
+            def _on_select():
+                for item in frames_horas:
+                    if hora_seleccionada.get() == item["hora"]:
+                        item["frame"].configure(bg="#BBDEFB", relief="raised")
+                        item["rb"].configure(bg="#BBDEFB")
+                    else:
+                        item["frame"].configure(bg="#F5F5F5", relief="solid")
+                        item["rb"].configure(bg="#F5F5F5")
+
+            rb.config(command=_on_select)
+
+        label_error = tk.Label(dlg, text="", bg="#FFFFFF", fg="red", font=("Segoe UI", 10))
+        label_error.pack()
+
+        def confirmar():
+            hora = hora_seleccionada.get()
+
+            if not hora:
+                label_error.config(text="Debe seleccionar una franja horaria")
+                return
+
+            # Obtener fecha según el tipo de widget
+            try:
+                if hasattr(date_entry, 'get_date'):
+                    # Es DateEntry (tkcalendar)
+                    fecha_obj = date_entry.get_date()
+                    fecha_str = fecha_obj.strftime("%Y-%m-%d")
+                else:
+                    # Es Entry manual
+                    fecha_str = date_entry.get().strip()
+                    fecha_obj = dt.datetime.strptime(fecha_str, "%Y-%m-%d").date()
+            except Exception as e:
+                label_error.config(text=f"Formato de fecha inválido: {str(e)}")
+                return
+
+            # Validar que sea L-V
+            if fecha_obj.weekday() > 4:
+                label_error.config(text="Solo se permiten reservas de Lunes a Viernes")
+                return
+
+            datetime_str = f"{fecha_str} {hora}"
+            try:
+                self.servicio_reservas.crear_reserva(self.cliente_actual, aparato.nombre, datetime_str)
+            except Exception as e:
+                label_error.config(text=str(e))
+                return
+            msg_label.config(text=f"Su solicitud para '{aparato.nombre}' ha sido enviada al administrador", fg="green")
+            print(f"Notificación: Solicitud de reserva para '{aparato.nombre}' enviada por {self.cliente_actual} para {datetime_str}")
+            dlg.destroy()
+
+        tk.Button(dlg, text="Confirmar Reserva", bg="#64B5F6", fg="white", font=("Segoe UI", 11, "bold"), command=confirmar).pack(pady=8)
+        tk.Button(dlg, text="Cancelar", bg="#CCCCCC", command=dlg.destroy).pack(pady=4)
